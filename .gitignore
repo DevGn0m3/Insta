@@ -1,0 +1,26 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Data (runtime generated)
+data/db/*.db
+data/db/*.db-wal
+data/db/*.db-shm
+data/media/*
+data/thumbnails/*
+data/logs/*
+data/.instagram_session
+!data/media/.gitkeep
+!data/thumbnails/.gitkeep
+!data/logs/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,48 @@
+# ─── Instagram Archiver — Python Dependencies ───────────────────────────────
+# Tested with Python 3.11+ on Windows 10/11
+
+# ── Web framework ────────────────────────────────────────────────────────────
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+python-multipart==0.0.12
+websockets==13.1
+
+# ── Database ──────────────────────────────────────────────────────────────────
+aiosqlite==0.20.0
+
+# ── Validation ─────────────────────────────────────────────────────────────────
+pydantic==2.9.2
+
+# ── Instagram download ────────────────────────────────────────────────────────
+instaloader==4.13.1
+httpx==0.27.2
+yt-dlp>=2024.10.0
+beautifulsoup4>=4.12
+readability-lxml>=0.8.1
+
+# ── Screenshots reales de sitios no-Instagram (Udemy, apps web, etc.) ────────
+# Requiere un paso extra después de pip install:
+#   playwright install chromium
+playwright>=1.47
+
+# ── Image processing ──────────────────────────────────────────────────────────
+Pillow==10.4.0
+
+# ── Video frame extraction (optional, for video thumbnails) ─────────────────
+opencv-python-headless==4.10.0.84
+
+# ── AI: Vision classification (CLIP) ──────────────────────────────────────────
+# Note: versions are left unpinned (minimum only) so pip resolves whatever
+# build is compatible with your installed Python version (3.9–3.13+).
+torch>=2.4
+torchvision>=0.19
+git+https://github.com/openai/CLIP.git
+
+# ── AI: OCR ────────────────────────────────────────────────────────────────────
+easyocr>=1.7.1
+
+# ── System monitoring (CPU/RAM/Disk for dashboard) ──────────────────────────
+psutil>=6.0
+
+# ── Numerical (used by color extraction) ──────────────────────────────────────
+numpy>=1.26
