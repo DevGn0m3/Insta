@@ -1,0 +1,367 @@
+2026-08-17 17:32:52 [INFO    ] backend.main - ============================================================
+2026-08-17 17:32:52 [INFO    ] backend.main - Instagram Archiver v1.0.0 starting...
+2026-08-17 17:32:52 [INFO    ] backend.main - Data directory: C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\data
+2026-08-17 17:32:52 [INFO    ] backend.database.connection - Database initialized at C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\data\db\archiver.db
+2026-08-17 17:32:52 [INFO    ] backend.main - Database ready
+2026-08-17 17:32:52 [INFO    ] backend.services.downloader.instagram_client - [IG_SESSION] state=active source=persisted username=fede.hustler
+2026-08-17 17:32:52 [INFO    ] backend.services.ai.vision_analyzer - VisionAnalyzer listo (lazy)
+2026-08-17 17:32:52 [INFO    ] backend.services.ai.ocr_service - OCRService listo (lazy)
+2026-08-17 17:32:52 [INFO    ] backend.services.ai.tag_generator - AI init (lazy) — vision=True ocr=True
+2026-08-17 17:32:52 [INFO    ] backend.services.downloader.download_manager - 928 tareas interrumpidas. Usá 'Reanudar cola'.
+2026-08-17 17:32:52 [INFO    ] backend.services.downloader.download_manager - Download manager started
+2026-08-17 17:32:52 [INFO    ] backend.main - Download manager ready
+2026-08-17 17:32:52 [INFO    ] backend.main - Server running at http://127.0.0.1:8000
+2026-08-17 17:32:52 [INFO    ] backend.main - Open your browser at: http://127.0.0.1:8000
+2026-08-17 17:32:53 [INFO    ] backend.services.downloader.download_manager - [CLASSIFY] task=992 url=https://www.instagram.com/p/DXGNidNGM8X/?img_index=5&igsh=bWFlNzJqODhvYnFy -> source_type=instagram
+2026-08-17 17:32:53 [INFO    ] task.992 - [task=992] Instagram — analizando URL...
+2026-08-17 17:32:53 [INFO    ] task.992 - [task=992] Obteniendo metadatos de Instagram...
+2026-08-17 17:32:53 [INFO    ] task.992 - [task=992] Instagram — estado de sesión: active (@fede.hustler)
+2026-08-17 17:32:53 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=graphql shortcode=DXGNidNGM8X status=403 content_type=text/html evidence=http_403 auth=session_cookie_present
+2026-08-17 17:32:53 [WARNING ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=access_denied method=graphql shortcode=DXGNidNGM8X username=fede.hustler auth=session_cookie_present http_status=403
+2026-08-17 17:33:15 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=simple shortcode=DXGNidNGM8X status=404 content_type=text/html evidence=http_404 auth=session_cookie_present
+2026-08-17 17:33:15 [INFO    ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=not_found method=simple shortcode=DXGNidNGM8X http_status=404
+2026-08-17 17:33:15 [ERROR   ] task.992 - [task=992] Error: Instagram rechazó la solicitud para el post DXGNidNGM8X (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+2026-08-17 17:33:15 [ERROR   ] backend.services.downloader.download_manager - Task 992 failed: Instagram rechazó la solicitud para el post DXGNidNGM8X (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+Traceback (most recent call last):
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 223, in _process_task
+    await self._run_instagram_pipeline(task_id, url, tlog)
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 305, in _run_instagram_pipeline
+    metadata = await self._instagram.fetch_post_metadata(url)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\instagram_client.py", line 422, in fetch_post_metadata
+    raise InstagramFetchError(messages[final_reason], reason=final_reason)
+backend.services.downloader.instagram_client.InstagramFetchError: Instagram rechazó la solicitud para el post DXGNidNGM8X (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+
+2026-08-17 17:33:15 [WARNING ] backend.services.downloader.download_manager - [IG_TASK] task=992 state=active reason=access_denied url=https://www.instagram.com/p/DXGNidNGM8X/?img_index=5&igsh=bWFlNzJqODhvYnFy
+2026-08-17 17:33:17 [INFO    ] backend.services.downloader.download_manager - [CLASSIFY] task=993 url=https://www.instagram.com/p/DXhAN6mCMTm/?igsh=MXJxMnFqZnQ2NzU1Zw== -> source_type=instagram
+2026-08-17 17:33:17 [INFO    ] task.993 - [task=993] Instagram — analizando URL...
+2026-08-17 17:33:17 [INFO    ] task.993 - [task=993] Obteniendo metadatos de Instagram...
+2026-08-17 17:33:17 [INFO    ] task.993 - [task=993] Instagram — estado de sesión: active (@fede.hustler)
+2026-08-17 17:33:42 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=graphql shortcode=DXhAN6mCMTm status=403 content_type=text/html evidence=http_403 auth=session_cookie_present
+2026-08-17 17:33:42 [WARNING ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=access_denied method=graphql shortcode=DXhAN6mCMTm username=fede.hustler auth=session_cookie_present http_status=403
+2026-08-17 17:34:06 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=simple shortcode=DXhAN6mCMTm status=404 content_type=text/html evidence=http_404 auth=session_cookie_present
+2026-08-17 17:34:06 [INFO    ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=not_found method=simple shortcode=DXhAN6mCMTm http_status=404
+2026-08-17 17:34:06 [ERROR   ] task.993 - [task=993] Error: Instagram rechazó la solicitud para el post DXhAN6mCMTm (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+2026-08-17 17:34:06 [ERROR   ] backend.services.downloader.download_manager - Task 993 failed: Instagram rechazó la solicitud para el post DXhAN6mCMTm (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+Traceback (most recent call last):
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 223, in _process_task
+    await self._run_instagram_pipeline(task_id, url, tlog)
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 305, in _run_instagram_pipeline
+    metadata = await self._instagram.fetch_post_metadata(url)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\instagram_client.py", line 422, in fetch_post_metadata
+    raise InstagramFetchError(messages[final_reason], reason=final_reason)
+backend.services.downloader.instagram_client.InstagramFetchError: Instagram rechazó la solicitud para el post DXhAN6mCMTm (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+
+2026-08-17 17:34:06 [WARNING ] backend.services.downloader.download_manager - [IG_TASK] task=993 state=active reason=access_denied url=https://www.instagram.com/p/DXhAN6mCMTm/?igsh=MXJxMnFqZnQ2NzU1Zw==
+2026-08-17 17:34:08 [INFO    ] backend.services.downloader.download_manager - [CLASSIFY] task=994 url=https://www.instagram.com/p/DXHAnxNDcAx/?img_index=1&igsh=cnY5aG1tdDJqNG5x -> source_type=instagram
+2026-08-17 17:34:08 [INFO    ] task.994 - [task=994] Instagram — analizando URL...
+2026-08-17 17:34:08 [INFO    ] task.994 - [task=994] Obteniendo metadatos de Instagram...
+2026-08-17 17:34:08 [INFO    ] task.994 - [task=994] Instagram — estado de sesión: active (@fede.hustler)
+2026-08-17 17:34:36 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=graphql shortcode=DXHAnxNDcAx status=403 content_type=text/html evidence=http_403 auth=session_cookie_present
+2026-08-17 17:34:36 [WARNING ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=access_denied method=graphql shortcode=DXHAnxNDcAx username=fede.hustler auth=session_cookie_present http_status=403
+2026-08-17 17:35:00 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=simple shortcode=DXHAnxNDcAx status=404 content_type=text/html evidence=http_404 auth=session_cookie_present
+2026-08-17 17:35:00 [INFO    ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=not_found method=simple shortcode=DXHAnxNDcAx http_status=404
+2026-08-17 17:35:00 [ERROR   ] task.994 - [task=994] Error: Instagram rechazó la solicitud para el post DXHAnxNDcAx (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+2026-08-17 17:35:01 [ERROR   ] backend.services.downloader.download_manager - Task 994 failed: Instagram rechazó la solicitud para el post DXHAnxNDcAx (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+Traceback (most recent call last):
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 223, in _process_task
+    await self._run_instagram_pipeline(task_id, url, tlog)
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 305, in _run_instagram_pipeline
+    metadata = await self._instagram.fetch_post_metadata(url)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\instagram_client.py", line 422, in fetch_post_metadata
+    raise InstagramFetchError(messages[final_reason], reason=final_reason)
+backend.services.downloader.instagram_client.InstagramFetchError: Instagram rechazó la solicitud para el post DXHAnxNDcAx (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+
+2026-08-17 17:35:01 [WARNING ] backend.services.downloader.download_manager - [IG_TASK] task=994 state=active reason=access_denied url=https://www.instagram.com/p/DXHAnxNDcAx/?img_index=1&igsh=cnY5aG1tdDJqNG5x
+2026-08-17 17:35:01 [INFO    ] backend.services.downloader.download_manager - [CLASSIFY] task=995 url=https://www.instagram.com/p/DXHCamTCBkp/?img_index=2&igsh=MXY1ZHRmd2I2bTBrOA== -> source_type=instagram
+2026-08-17 17:35:01 [INFO    ] task.995 - [task=995] Instagram — analizando URL...
+2026-08-17 17:35:01 [INFO    ] task.995 - [task=995] Obteniendo metadatos de Instagram...
+2026-08-17 17:35:01 [INFO    ] task.995 - [task=995] Instagram — estado de sesión: active (@fede.hustler)
+2026-08-17 17:35:30 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=graphql shortcode=DXHCamTCBkp status=403 content_type=text/html evidence=http_403 auth=session_cookie_present
+2026-08-17 17:35:30 [WARNING ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=access_denied method=graphql shortcode=DXHCamTCBkp username=fede.hustler auth=session_cookie_present http_status=403
+2026-08-17 17:35:59 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=simple shortcode=DXHCamTCBkp status=404 content_type=text/html evidence=http_404 auth=session_cookie_present
+2026-08-17 17:35:59 [INFO    ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=not_found method=simple shortcode=DXHCamTCBkp http_status=404
+2026-08-17 17:35:59 [ERROR   ] task.995 - [task=995] Error: Instagram rechazó la solicitud para el post DXHCamTCBkp (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+2026-08-17 17:35:59 [ERROR   ] backend.services.downloader.download_manager - Task 995 failed: Instagram rechazó la solicitud para el post DXHCamTCBkp (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+Traceback (most recent call last):
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 223, in _process_task
+    await self._run_instagram_pipeline(task_id, url, tlog)
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 305, in _run_instagram_pipeline
+    metadata = await self._instagram.fetch_post_metadata(url)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\instagram_client.py", line 422, in fetch_post_metadata
+    raise InstagramFetchError(messages[final_reason], reason=final_reason)
+backend.services.downloader.instagram_client.InstagramFetchError: Instagram rechazó la solicitud para el post DXHCamTCBkp (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+
+2026-08-17 17:35:59 [WARNING ] backend.services.downloader.download_manager - [IG_TASK] task=995 state=active reason=access_denied url=https://www.instagram.com/p/DXHCamTCBkp/?img_index=2&igsh=MXY1ZHRmd2I2bTBrOA==
+2026-08-17 17:36:00 [INFO    ] backend.services.downloader.download_manager - [CLASSIFY] task=996 url=https://www.instagram.com/p/DXhesyMlerf/?img_index=3&igsh=MzlvOGg2d2s4aDRw -> source_type=instagram
+2026-08-17 17:36:00 [INFO    ] task.996 - [task=996] Instagram — analizando URL...
+2026-08-17 17:36:00 [INFO    ] task.996 - [task=996] Obteniendo metadatos de Instagram...
+2026-08-17 17:36:01 [INFO    ] task.996 - [task=996] Instagram — estado de sesión: active (@fede.hustler)
+2026-08-17 17:36:21 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=graphql shortcode=DXhesyMlerf status=403 content_type=text/html evidence=http_403 auth=session_cookie_present
+2026-08-17 17:36:21 [WARNING ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=access_denied method=graphql shortcode=DXhesyMlerf username=fede.hustler auth=session_cookie_present http_status=403
+2026-08-17 17:36:44 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=simple shortcode=DXhesyMlerf status=404 content_type=text/html evidence=http_404 auth=session_cookie_present
+2026-08-17 17:36:44 [INFO    ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=not_found method=simple shortcode=DXhesyMlerf http_status=404
+2026-08-17 17:36:44 [ERROR   ] task.996 - [task=996] Error: Instagram rechazó la solicitud para el post DXhesyMlerf (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+2026-08-17 17:36:44 [ERROR   ] backend.services.downloader.download_manager - Task 996 failed: Instagram rechazó la solicitud para el post DXhesyMlerf (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+Traceback (most recent call last):
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 223, in _process_task
+    await self._run_instagram_pipeline(task_id, url, tlog)
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 305, in _run_instagram_pipeline
+    metadata = await self._instagram.fetch_post_metadata(url)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\instagram_client.py", line 422, in fetch_post_metadata
+    raise InstagramFetchError(messages[final_reason], reason=final_reason)
+backend.services.downloader.instagram_client.InstagramFetchError: Instagram rechazó la solicitud para el post DXhesyMlerf (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+
+2026-08-17 17:36:44 [WARNING ] backend.services.downloader.download_manager - [IG_TASK] task=996 state=active reason=access_denied url=https://www.instagram.com/p/DXhesyMlerf/?img_index=3&igsh=MzlvOGg2d2s4aDRw
+2026-08-17 17:36:45 [INFO    ] backend.services.downloader.download_manager - [CLASSIFY] task=997 url=https://www.instagram.com/p/DXhHe2vEUtL/?img_index=1&igsh=djh4bWs1dHpsam10 -> source_type=instagram
+2026-08-17 17:36:45 [INFO    ] task.997 - [task=997] Instagram — analizando URL...
+2026-08-17 17:36:45 [INFO    ] task.997 - [task=997] Obteniendo metadatos de Instagram...
+2026-08-17 17:36:45 [INFO    ] task.997 - [task=997] Instagram — estado de sesión: active (@fede.hustler)
+2026-08-17 17:37:11 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=graphql shortcode=DXhHe2vEUtL status=403 content_type=text/html evidence=http_403 auth=session_cookie_present
+2026-08-17 17:37:11 [WARNING ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=access_denied method=graphql shortcode=DXhHe2vEUtL username=fede.hustler auth=session_cookie_present http_status=403
+2026-08-17 17:37:36 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=simple shortcode=DXhHe2vEUtL status=404 content_type=text/html evidence=http_404 auth=session_cookie_present
+2026-08-17 17:37:36 [INFO    ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=not_found method=simple shortcode=DXhHe2vEUtL http_status=404
+2026-08-17 17:37:36 [ERROR   ] task.997 - [task=997] Error: Instagram rechazó la solicitud para el post DXhHe2vEUtL (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+2026-08-17 17:37:36 [ERROR   ] backend.services.downloader.download_manager - Task 997 failed: Instagram rechazó la solicitud para el post DXhHe2vEUtL (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+Traceback (most recent call last):
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 223, in _process_task
+    await self._run_instagram_pipeline(task_id, url, tlog)
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 305, in _run_instagram_pipeline
+    metadata = await self._instagram.fetch_post_metadata(url)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\instagram_client.py", line 422, in fetch_post_metadata
+    raise InstagramFetchError(messages[final_reason], reason=final_reason)
+backend.services.downloader.instagram_client.InstagramFetchError: Instagram rechazó la solicitud para el post DXhHe2vEUtL (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+
+2026-08-17 17:37:36 [WARNING ] backend.services.downloader.download_manager - [IG_TASK] task=997 state=active reason=access_denied url=https://www.instagram.com/p/DXhHe2vEUtL/?img_index=1&igsh=djh4bWs1dHpsam10
+2026-08-17 17:37:38 [INFO    ] backend.services.downloader.download_manager - [CLASSIFY] task=998 url=https://www.instagram.com/p/DXHJvEGDRPC/?igsh=MWJteW1ucDBoZTRvMQ== -> source_type=instagram
+2026-08-17 17:37:38 [INFO    ] task.998 - [task=998] Instagram — analizando URL...
+2026-08-17 17:37:38 [INFO    ] task.998 - [task=998] Obteniendo metadatos de Instagram...
+2026-08-17 17:37:38 [INFO    ] task.998 - [task=998] Instagram — estado de sesión: active (@fede.hustler)
+2026-08-17 17:37:59 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=graphql shortcode=DXHJvEGDRPC status=403 content_type=text/html evidence=http_403 auth=session_cookie_present
+2026-08-17 17:37:59 [WARNING ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=access_denied method=graphql shortcode=DXHJvEGDRPC username=fede.hustler auth=session_cookie_present http_status=403
+2026-08-17 17:38:25 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=simple shortcode=DXHJvEGDRPC status=404 content_type=text/html evidence=http_404 auth=session_cookie_present
+2026-08-17 17:38:25 [INFO    ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=not_found method=simple shortcode=DXHJvEGDRPC http_status=404
+2026-08-17 17:38:25 [ERROR   ] task.998 - [task=998] Error: Instagram rechazó la solicitud para el post DXHJvEGDRPC (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+2026-08-17 17:38:25 [ERROR   ] backend.services.downloader.download_manager - Task 998 failed: Instagram rechazó la solicitud para el post DXHJvEGDRPC (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+Traceback (most recent call last):
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 223, in _process_task
+    await self._run_instagram_pipeline(task_id, url, tlog)
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 305, in _run_instagram_pipeline
+    metadata = await self._instagram.fetch_post_metadata(url)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\instagram_client.py", line 422, in fetch_post_metadata
+    raise InstagramFetchError(messages[final_reason], reason=final_reason)
+backend.services.downloader.instagram_client.InstagramFetchError: Instagram rechazó la solicitud para el post DXHJvEGDRPC (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+
+2026-08-17 17:38:25 [WARNING ] backend.services.downloader.download_manager - [IG_TASK] task=998 state=active reason=access_denied url=https://www.instagram.com/p/DXHJvEGDRPC/?igsh=MWJteW1ucDBoZTRvMQ==
+2026-08-17 17:38:25 [INFO    ] backend.services.downloader.download_manager - [CLASSIFY] task=999 url=https://www.instagram.com/p/DXI3YmaAEG5/?igsh=bmJzOGkyZXljNTZq -> source_type=instagram
+2026-08-17 17:38:25 [INFO    ] task.999 - [task=999] Instagram — analizando URL...
+2026-08-17 17:38:25 [INFO    ] task.999 - [task=999] Obteniendo metadatos de Instagram...
+2026-08-17 17:38:25 [INFO    ] task.999 - [task=999] Instagram — estado de sesión: active (@fede.hustler)
+2026-08-17 17:38:54 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=graphql shortcode=DXI3YmaAEG5 status=403 content_type=text/html evidence=http_403 auth=session_cookie_present
+2026-08-17 17:38:54 [WARNING ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=access_denied method=graphql shortcode=DXI3YmaAEG5 username=fede.hustler auth=session_cookie_present http_status=403
+2026-08-17 17:39:21 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=simple shortcode=DXI3YmaAEG5 status=404 content_type=text/html evidence=http_404 auth=session_cookie_present
+2026-08-17 17:39:21 [INFO    ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=not_found method=simple shortcode=DXI3YmaAEG5 http_status=404
+2026-08-17 17:39:21 [ERROR   ] task.999 - [task=999] Error: Instagram rechazó la solicitud para el post DXI3YmaAEG5 (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+2026-08-17 17:39:21 [ERROR   ] backend.services.downloader.download_manager - Task 999 failed: Instagram rechazó la solicitud para el post DXI3YmaAEG5 (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+Traceback (most recent call last):
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 223, in _process_task
+    await self._run_instagram_pipeline(task_id, url, tlog)
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 305, in _run_instagram_pipeline
+    metadata = await self._instagram.fetch_post_metadata(url)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\instagram_client.py", line 422, in fetch_post_metadata
+    raise InstagramFetchError(messages[final_reason], reason=final_reason)
+backend.services.downloader.instagram_client.InstagramFetchError: Instagram rechazó la solicitud para el post DXI3YmaAEG5 (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+
+2026-08-17 17:39:21 [WARNING ] backend.services.downloader.download_manager - [IG_TASK] task=999 state=active reason=access_denied url=https://www.instagram.com/p/DXI3YmaAEG5/?igsh=bmJzOGkyZXljNTZq
+2026-08-17 17:39:22 [INFO    ] backend.services.downloader.download_manager - [CLASSIFY] task=1000 url=https://www.instagram.com/p/DXjwYYbAvZZ/?img_index=1&igsh=MXEwbW1vYjE2OXY2MA== -> source_type=instagram
+2026-08-17 17:39:22 [INFO    ] task.1000 - [task=1000] Instagram — analizando URL...
+2026-08-17 17:39:22 [INFO    ] task.1000 - [task=1000] Obteniendo metadatos de Instagram...
+2026-08-17 17:39:22 [INFO    ] task.1000 - [task=1000] Instagram — estado de sesión: active (@fede.hustler)
+2026-08-17 17:39:50 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=graphql shortcode=DXjwYYbAvZZ status=403 content_type=text/html evidence=http_403 auth=session_cookie_present
+2026-08-17 17:39:50 [WARNING ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=access_denied method=graphql shortcode=DXjwYYbAvZZ username=fede.hustler auth=session_cookie_present http_status=403
+2026-08-17 17:40:12 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=simple shortcode=DXjwYYbAvZZ status=500 content_type=text/html evidence=server_error auth=session_cookie_present
+2026-08-17 17:40:12 [INFO    ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=unknown method=simple shortcode=DXjwYYbAvZZ http_status=500
+2026-08-17 17:40:12 [ERROR   ] task.1000 - [task=1000] Error: Instagram rechazó la solicitud para el post DXjwYYbAvZZ (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+2026-08-17 17:40:12 [ERROR   ] backend.services.downloader.download_manager - Task 1000 failed: Instagram rechazó la solicitud para el post DXjwYYbAvZZ (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+Traceback (most recent call last):
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 223, in _process_task
+    await self._run_instagram_pipeline(task_id, url, tlog)
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 305, in _run_instagram_pipeline
+    metadata = await self._instagram.fetch_post_metadata(url)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\instagram_client.py", line 422, in fetch_post_metadata
+    raise InstagramFetchError(messages[final_reason], reason=final_reason)
+backend.services.downloader.instagram_client.InstagramFetchError: Instagram rechazó la solicitud para el post DXjwYYbAvZZ (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+
+2026-08-17 17:40:12 [WARNING ] backend.services.downloader.download_manager - [IG_TASK] task=1000 state=active reason=access_denied url=https://www.instagram.com/p/DXjwYYbAvZZ/?img_index=1&igsh=MXEwbW1vYjE2OXY2MA==
+2026-08-17 17:40:13 [INFO    ] backend.services.downloader.download_manager - [CLASSIFY] task=1001 url=https://www.instagram.com/p/DXKTmkkDhS_/?img_index=2&igsh=ZjYzcHhsY2g2bXRy -> source_type=instagram
+2026-08-17 17:40:13 [INFO    ] task.1001 - [task=1001] Instagram — analizando URL...
+2026-08-17 17:40:13 [INFO    ] task.1001 - [task=1001] Obteniendo metadatos de Instagram...
+2026-08-17 17:40:13 [INFO    ] task.1001 - [task=1001] Instagram — estado de sesión: active (@fede.hustler)
+2026-08-17 17:40:15 [INFO    ] backend.main - Instagram Archiver stopped
+2026-08-18 02:57:46 [INFO    ] backend.main - ============================================================
+2026-08-18 02:57:46 [INFO    ] backend.main - Instagram Archiver v1.0.0 starting...
+2026-08-18 02:57:46 [INFO    ] backend.main - Data directory: C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\data
+2026-08-18 02:57:46 [INFO    ] backend.database.connection - Database initialized at C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\data\db\archiver.db
+2026-08-18 02:57:46 [INFO    ] backend.main - Database ready
+2026-08-18 02:57:46 [INFO    ] backend.services.downloader.instagram_client - [IG_SESSION] state=active source=persisted username=fede.hustler
+2026-08-18 02:57:46 [INFO    ] backend.services.ai.vision_analyzer - VisionAnalyzer listo (lazy)
+2026-08-18 02:57:46 [INFO    ] backend.services.ai.ocr_service - OCRService listo (lazy)
+2026-08-18 02:57:46 [INFO    ] backend.services.ai.tag_generator - AI init (lazy) — vision=True ocr=True
+2026-08-18 02:57:46 [INFO    ] backend.services.downloader.download_manager - 918 tareas interrumpidas. Usá 'Reanudar cola'.
+2026-08-18 02:57:46 [INFO    ] backend.services.downloader.download_manager - Download manager started
+2026-08-18 02:57:46 [INFO    ] backend.main - Download manager ready
+2026-08-18 02:57:46 [INFO    ] backend.main - Server running at http://127.0.0.1:8000
+2026-08-18 02:57:46 [INFO    ] backend.main - Open your browser at: http://127.0.0.1:8000
+2026-08-18 02:57:46 [INFO    ] backend.services.downloader.download_manager - [CLASSIFY] task=1002 url=https://www.instagram.com/p/DXllxuZmevv/?igsh=MXFmeDA3NGZrenZkNw== -> source_type=instagram
+2026-08-18 02:57:46 [INFO    ] task.1002 - [task=1002] Instagram — analizando URL...
+2026-08-18 02:57:46 [INFO    ] task.1002 - [task=1002] Obteniendo metadatos de Instagram...
+2026-08-18 02:57:46 [INFO    ] task.1002 - [task=1002] Instagram — estado de sesión: active (@fede.hustler)
+2026-08-18 02:57:47 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=graphql shortcode=DXllxuZmevv status=403 content_type=text/html evidence=http_403 auth=session_cookie_present
+2026-08-18 02:57:47 [WARNING ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=access_denied method=graphql shortcode=DXllxuZmevv username=fede.hustler auth=session_cookie_present http_status=403
+2026-08-18 02:57:53 [INFO    ] backend.api.routes.downloads - Solicitud de login de Instagram para the.super.mindset usando método=sessionid
+2026-08-18 02:57:55 [INFO    ] backend.services.downloader.instagram_client - [IG_SESSION] state=active method=sessionid username=the_gn0m3
+2026-08-18 02:57:55 [INFO    ] backend.services.downloader.download_manager - [IG_RATE] concurrency=1 reason=conservative_pacing
+2026-08-18 02:58:10 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=simple shortcode=DXllxuZmevv status=404 content_type=text/html evidence=http_404 auth=session_cookie_present
+2026-08-18 02:58:10 [INFO    ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=not_found method=simple shortcode=DXllxuZmevv http_status=404
+2026-08-18 02:58:10 [ERROR   ] task.1002 - [task=1002] Error: Instagram rechazó la solicitud para el post DXllxuZmevv (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+2026-08-18 02:58:10 [ERROR   ] backend.services.downloader.download_manager - Task 1002 failed: Instagram rechazó la solicitud para el post DXllxuZmevv (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+Traceback (most recent call last):
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 223, in _process_task
+    await self._run_instagram_pipeline(task_id, url, tlog)
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 305, in _run_instagram_pipeline
+    metadata = await self._instagram.fetch_post_metadata(url)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\instagram_client.py", line 422, in fetch_post_metadata
+    raise InstagramFetchError(messages[final_reason], reason=final_reason)
+backend.services.downloader.instagram_client.InstagramFetchError: Instagram rechazó la solicitud para el post DXllxuZmevv (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+
+2026-08-18 02:58:10 [WARNING ] backend.services.downloader.download_manager - [IG_TASK] task=1002 state=active reason=access_denied url=https://www.instagram.com/p/DXllxuZmevv/?igsh=MXFmeDA3NGZrenZkNw==
+2026-08-18 02:58:11 [INFO    ] backend.services.downloader.download_manager - [CLASSIFY] task=1003 url=https://www.instagram.com/p/DXlUMRIjMpD/?img_index=2&igsh=ejdrYXNyNXNzcnRr -> source_type=instagram
+2026-08-18 02:58:11 [INFO    ] task.1003 - [task=1003] Instagram — analizando URL...
+2026-08-18 02:58:11 [INFO    ] task.1003 - [task=1003] Obteniendo metadatos de Instagram...
+2026-08-18 02:58:11 [INFO    ] task.1003 - [task=1003] Instagram — estado de sesión: active (@the_gn0m3)
+2026-08-18 02:58:40 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=graphql shortcode=DXlUMRIjMpD status=403 content_type=text/html evidence=http_403 auth=session_cookie_present
+2026-08-18 02:58:40 [WARNING ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=access_denied method=graphql shortcode=DXlUMRIjMpD username=the_gn0m3 auth=session_cookie_present http_status=403
+2026-08-18 02:59:10 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=simple shortcode=DXlUMRIjMpD status=404 content_type=text/html evidence=http_404 auth=session_cookie_present
+2026-08-18 02:59:10 [INFO    ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=not_found method=simple shortcode=DXlUMRIjMpD http_status=404
+2026-08-18 02:59:10 [ERROR   ] task.1003 - [task=1003] Error: Instagram rechazó la solicitud para el post DXlUMRIjMpD (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+2026-08-18 02:59:10 [ERROR   ] backend.services.downloader.download_manager - Task 1003 failed: Instagram rechazó la solicitud para el post DXlUMRIjMpD (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+Traceback (most recent call last):
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 223, in _process_task
+    await self._run_instagram_pipeline(task_id, url, tlog)
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 305, in _run_instagram_pipeline
+    metadata = await self._instagram.fetch_post_metadata(url)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\instagram_client.py", line 422, in fetch_post_metadata
+    raise InstagramFetchError(messages[final_reason], reason=final_reason)
+backend.services.downloader.instagram_client.InstagramFetchError: Instagram rechazó la solicitud para el post DXlUMRIjMpD (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+
+2026-08-18 02:59:10 [WARNING ] backend.services.downloader.download_manager - [IG_TASK] task=1003 state=active reason=access_denied url=https://www.instagram.com/p/DXlUMRIjMpD/?img_index=2&igsh=ejdrYXNyNXNzcnRr
+2026-08-18 02:59:12 [INFO    ] backend.services.downloader.download_manager - [CLASSIFY] task=1004 url=https://www.instagram.com/p/DXlW54iDHIy/?igsh=NXluZHhwNXJvN2Ji -> source_type=instagram
+2026-08-18 02:59:12 [INFO    ] task.1004 - [task=1004] Instagram — analizando URL...
+2026-08-18 02:59:12 [INFO    ] task.1004 - [task=1004] Obteniendo metadatos de Instagram...
+2026-08-18 02:59:12 [INFO    ] task.1004 - [task=1004] Instagram — estado de sesión: active (@the_gn0m3)
+2026-08-18 02:59:38 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=graphql shortcode=DXlW54iDHIy status=403 content_type=text/html evidence=http_403 auth=session_cookie_present
+2026-08-18 02:59:38 [WARNING ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=access_denied method=graphql shortcode=DXlW54iDHIy username=the_gn0m3 auth=session_cookie_present http_status=403
+2026-08-18 03:00:04 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=simple shortcode=DXlW54iDHIy status=404 content_type=text/html evidence=http_404 auth=session_cookie_present
+2026-08-18 03:00:04 [INFO    ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=not_found method=simple shortcode=DXlW54iDHIy http_status=404
+2026-08-18 03:00:04 [ERROR   ] task.1004 - [task=1004] Error: Instagram rechazó la solicitud para el post DXlW54iDHIy (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+2026-08-18 03:00:04 [ERROR   ] backend.services.downloader.download_manager - Task 1004 failed: Instagram rechazó la solicitud para el post DXlW54iDHIy (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+Traceback (most recent call last):
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 223, in _process_task
+    await self._run_instagram_pipeline(task_id, url, tlog)
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 305, in _run_instagram_pipeline
+    metadata = await self._instagram.fetch_post_metadata(url)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\instagram_client.py", line 422, in fetch_post_metadata
+    raise InstagramFetchError(messages[final_reason], reason=final_reason)
+backend.services.downloader.instagram_client.InstagramFetchError: Instagram rechazó la solicitud para el post DXlW54iDHIy (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+
+2026-08-18 03:00:04 [WARNING ] backend.services.downloader.download_manager - [IG_TASK] task=1004 state=active reason=access_denied url=https://www.instagram.com/p/DXlW54iDHIy/?igsh=NXluZHhwNXJvN2Ji
+2026-08-18 03:00:05 [INFO    ] backend.services.downloader.download_manager - [CLASSIFY] task=1005 url=https://www.instagram.com/p/DXMdm0ECLGl/?img_index=1&igsh=bXNpeTcwdm12NzZi -> source_type=instagram
+2026-08-18 03:00:05 [INFO    ] task.1005 - [task=1005] Instagram — analizando URL...
+2026-08-18 03:00:05 [INFO    ] task.1005 - [task=1005] Obteniendo metadatos de Instagram...
+2026-08-18 03:00:05 [INFO    ] task.1005 - [task=1005] Instagram — estado de sesión: active (@the_gn0m3)
+2026-08-18 03:00:30 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=graphql shortcode=DXMdm0ECLGl status=403 content_type=text/html evidence=http_403 auth=session_cookie_present
+2026-08-18 03:00:30 [WARNING ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=access_denied method=graphql shortcode=DXMdm0ECLGl username=the_gn0m3 auth=session_cookie_present http_status=403
+2026-08-18 03:00:57 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=simple shortcode=DXMdm0ECLGl status=404 content_type=text/html evidence=http_404 auth=session_cookie_present
+2026-08-18 03:00:57 [INFO    ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=not_found method=simple shortcode=DXMdm0ECLGl http_status=404
+2026-08-18 03:00:57 [ERROR   ] task.1005 - [task=1005] Error: Instagram rechazó la solicitud para el post DXMdm0ECLGl (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+2026-08-18 03:00:57 [ERROR   ] backend.services.downloader.download_manager - Task 1005 failed: Instagram rechazó la solicitud para el post DXMdm0ECLGl (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+Traceback (most recent call last):
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 223, in _process_task
+    await self._run_instagram_pipeline(task_id, url, tlog)
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 305, in _run_instagram_pipeline
+    metadata = await self._instagram.fetch_post_metadata(url)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\instagram_client.py", line 422, in fetch_post_metadata
+    raise InstagramFetchError(messages[final_reason], reason=final_reason)
+backend.services.downloader.instagram_client.InstagramFetchError: Instagram rechazó la solicitud para el post DXMdm0ECLGl (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+
+2026-08-18 03:00:57 [WARNING ] backend.services.downloader.download_manager - [IG_TASK] task=1005 state=active reason=access_denied url=https://www.instagram.com/p/DXMdm0ECLGl/?img_index=1&igsh=bXNpeTcwdm12NzZi
+2026-08-18 03:00:58 [INFO    ] backend.services.downloader.download_manager - [CLASSIFY] task=1006 url=https://www.instagram.com/p/DXmj64LjetO/?igsh=dWl2Njl4bjhlOGRt -> source_type=instagram
+2026-08-18 03:00:58 [INFO    ] task.1006 - [task=1006] Instagram — analizando URL...
+2026-08-18 03:00:58 [INFO    ] task.1006 - [task=1006] Obteniendo metadatos de Instagram...
+2026-08-18 03:00:58 [INFO    ] task.1006 - [task=1006] Instagram — estado de sesión: active (@the_gn0m3)
+2026-08-18 03:01:24 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=graphql shortcode=DXmj64LjetO status=403 content_type=text/html evidence=http_403 auth=session_cookie_present
+2026-08-18 03:01:24 [WARNING ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=access_denied method=graphql shortcode=DXmj64LjetO username=the_gn0m3 auth=session_cookie_present http_status=403
+2026-08-18 03:01:47 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=simple shortcode=DXmj64LjetO status=404 content_type=text/html evidence=http_404 auth=session_cookie_present
+2026-08-18 03:01:47 [INFO    ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=not_found method=simple shortcode=DXmj64LjetO http_status=404
+2026-08-18 03:01:47 [ERROR   ] task.1006 - [task=1006] Error: Instagram rechazó la solicitud para el post DXmj64LjetO (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+2026-08-18 03:01:47 [ERROR   ] backend.services.downloader.download_manager - Task 1006 failed: Instagram rechazó la solicitud para el post DXmj64LjetO (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+Traceback (most recent call last):
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 223, in _process_task
+    await self._run_instagram_pipeline(task_id, url, tlog)
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 305, in _run_instagram_pipeline
+    metadata = await self._instagram.fetch_post_metadata(url)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\instagram_client.py", line 422, in fetch_post_metadata
+    raise InstagramFetchError(messages[final_reason], reason=final_reason)
+backend.services.downloader.instagram_client.InstagramFetchError: Instagram rechazó la solicitud para el post DXmj64LjetO (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+
+2026-08-18 03:01:47 [WARNING ] backend.services.downloader.download_manager - [IG_TASK] task=1006 state=active reason=access_denied url=https://www.instagram.com/p/DXmj64LjetO/?igsh=dWl2Njl4bjhlOGRt
+2026-08-18 03:02:52 [INFO    ] backend.main - Instagram Archiver stopped
+2026-08-18 03:13:56 [INFO    ] backend.main - ============================================================
+2026-08-18 03:13:56 [INFO    ] backend.main - Instagram Archiver v1.0.0 starting...
+2026-08-18 03:13:56 [INFO    ] backend.main - Data directory: C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\data
+2026-08-18 03:13:56 [INFO    ] backend.database.connection - Database initialized at C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\data\db\archiver.db
+2026-08-18 03:13:56 [INFO    ] backend.main - Database ready
+2026-08-18 03:13:56 [INFO    ] backend.services.downloader.instagram_client - [IG_SESSION] state=active source=persisted username=the_gn0m3
+2026-08-18 03:13:56 [INFO    ] backend.services.ai.vision_analyzer - VisionAnalyzer listo (lazy)
+2026-08-18 03:13:56 [INFO    ] backend.services.ai.ocr_service - OCRService listo (lazy)
+2026-08-18 03:13:56 [INFO    ] backend.services.ai.tag_generator - AI init (lazy) — vision=True ocr=True
+2026-08-18 03:13:56 [INFO    ] backend.services.downloader.download_manager - 913 tareas interrumpidas. Usá 'Reanudar cola'.
+2026-08-18 03:13:56 [INFO    ] backend.services.downloader.download_manager - Download manager started
+2026-08-18 03:13:56 [INFO    ] backend.main - Download manager ready
+2026-08-18 03:13:56 [INFO    ] backend.main - Server running at http://127.0.0.1:8000
+2026-08-18 03:13:56 [INFO    ] backend.main - Open your browser at: http://127.0.0.1:8000
+2026-08-18 03:14:14 [INFO    ] backend.services.downloader.download_manager - [CLASSIFY] task=1007 url=https://www.instagram.com/p/DXmjEovDRmo/?img_index=2&igsh=MXd4a3dsMjhlYzV1NA== -> source_type=instagram
+2026-08-18 03:14:14 [INFO    ] task.1007 - [task=1007] Instagram — analizando URL...
+2026-08-18 03:14:14 [INFO    ] task.1007 - [task=1007] Obteniendo metadatos de Instagram...
+2026-08-18 03:14:14 [INFO    ] task.1007 - [task=1007] Instagram — estado de sesión: active (@the_gn0m3)
+2026-08-18 03:14:15 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=graphql shortcode=DXmjEovDRmo status=403 content_type=text/html evidence=http_403 auth=session_cookie_present
+2026-08-18 03:14:15 [WARNING ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=access_denied method=graphql shortcode=DXmjEovDRmo username=the_gn0m3 auth=session_cookie_present http_status=403
+2026-08-18 03:14:38 [INFO    ] backend.services.downloader.instagram_client - [IG_HTTP] method=simple shortcode=DXmjEovDRmo status=404 content_type=text/html evidence=http_404 auth=session_cookie_present
+2026-08-18 03:14:38 [INFO    ] backend.services.downloader.instagram_client - [IG_FETCH] state=active reason=not_found method=simple shortcode=DXmjEovDRmo http_status=404
+2026-08-18 03:14:38 [ERROR   ] task.1007 - [task=1007] Error: Instagram rechazó la solicitud para el post DXmjEovDRmo (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+2026-08-18 03:14:38 [ERROR   ] backend.services.downloader.download_manager - Task 1007 failed: Instagram rechazó la solicitud para el post DXmjEovDRmo (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+Traceback (most recent call last):
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 225, in _process_task
+    await self._run_instagram_pipeline(task_id, url, tlog)
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\download_manager.py", line 307, in _run_instagram_pipeline
+    metadata = await self._instagram.fetch_post_metadata(url)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Rescate\Desktop\Proyectos\instagram-archiver\backend\services\downloader\instagram_client.py", line 428, in fetch_post_metadata
+    raise InstagramFetchError(messages[final_reason], reason=final_reason)
+backend.services.downloader.instagram_client.InstagramFetchError: Instagram rechazó la solicitud para el post DXmjEovDRmo (HTTP 403). La sesión está activa y fue enviada; este 403 no demuestra que el post sea privado. Puede tratarse de un bloqueo temporal del endpoint, una restricción de Instagram o una respuesta WAF.
+
+2026-08-18 03:14:38 [WARNING ] backend.services.downloader.download_manager - [IG_TASK] task=1007 state=active reason=access_denied url=https://www.instagram.com/p/DXmjEovDRmo/?img_index=2&igsh=MXd4a3dsMjhlYzV1NA==
+2026-08-18 03:16:25 [INFO    ] backend.main - Instagram Archiver stopped
