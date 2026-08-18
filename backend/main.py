@@ -5,6 +5,8 @@ WebSocket endpoint, and manages application lifecycle.
 """
 
 from __future__ import annotations
+import warnings
+warnings.filterwarnings("ignore", message=r".*pin_memory.*argument is set as true but no accelerator is found.*", category=UserWarning)
 
 import logging
 from contextlib import asynccontextmanager

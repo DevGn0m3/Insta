@@ -58,7 +58,8 @@ class TagGeneratorService:
                         await self._tag_repo.save_ocr(media_id, ocr["text"], ocr["confidence"], ocr["language"])
                 await broadcast({"type":"task_progress","task_id":task_id,"progress":75.0+((i+1)/total)*25.0})
         finally:
-            # Mantiene modelos en caché caliente para no penalizar el CPU en cada post
+            if _vision_analyzer: _vision_analyzer._unload()
+            if _ocr_service: _ocr_service._unload()
             import gc; gc.collect()
         await tlog.info(f"IA completada ({total} imágenes).")
         await broadcast({"type":"ai_completed","task_id":task_id,"post_id":post_id})
