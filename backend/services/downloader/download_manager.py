@@ -5,7 +5,10 @@ from datetime import datetime, timezone
 import hashlib
 import json
 import logging
+import mimetypes
 from pathlib import Path
+import random
+import re
 import time
 from typing import Any, Callable, Coroutine, Optional, Set
 
@@ -13,20 +16,15 @@ import httpx
 
 from backend.config import config
 from backend.models import TaskStatus
-from backend.repositories.post_repository import (
+from backend.repositories.media_repository import (
     AuthorRepository,
     MediaRepository,
-    PostRepository,
     TagRepository,
 )
-from backend.repositories.task_repository import TaskRepository,
-)
-from backend.services.downloader.file_utils import compute_sha256, detect_mime, get_media_dir, relative_to_data
-from backend.services.downloader.human_behavior import HumanBehavior
+from backend.repositories.post_repository import PostRepository
+from backend.repositories.task_repository import DownloadTaskRepository as TaskRepository
 from backend.services.downloader.instagram_client import InstagramClient, InstagramFetchError
-from backend.services.downloader.thumbnails import ThumbnailGenerator
 from backend.services.downloader.universal_downloader import UniversalDownloader
-from backend.services.downloader.url_classifier import URLClassifier
 from backend.utils.logger import TaskLogger
 
 logger = logging.getLogger(__name__)
@@ -38,6 +36,83 @@ _locks_mutex = asyncio.Lock()
 RATE_LIMIT_COOLDOWN_S = 300.0
 
 
+# ---------------------------------------------------------------------------
+# Utilidades internas (sin dependencias a módulos inexistentes)
+# ---------------------------------------------------------------------------
+
+def compute_sha256(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def detect_mime(path: Path) -> str:
+    mime, _ = mimetypes.guess_type(str(path))
+    return mime or "application/octet-stream"
+
+
+def get_media_dir(shortcode: str) -> Path:
+    d = config.data_dir / "media" / shortcode
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def relative_to_data(path: Path) -> str:
+    try:
+        return str(path.relative_to(config.data_dir)).replace("\\", "/")
+    except ValueError:
+        return str(path).replace("\\", "/")
+
+
+class URLClassifier:
+    @staticmethod
+    def classify(url: str) -> str:
+        u = url.lower()
+        if "instagram.com" in u:
+            return "instagram"
+        if "youtube.com" in u or "youtu.be" in u:
+            return "youtube"
+        if "tiktok.com" in u:
+            return "tiktok"
+        if "twitter.com" in u or "x.com" in u:
+            return "twitter"
+        if "pinterest.com" in u or "pin.it" in u:
+            return "pinterest"
+        if "reddit.com" in u:
+            return "reddit"
+        return "universal"
+
+
+class HumanBehavior:
+    async def wait_between_requests(self) -> None:
+        await asyncio.sleep(random.uniform(1.2, 2.5))
+
+    async def wait_between_posts(self) -> None:
+        await asyncio.sleep(random.uniform(2.0, 4.0))
+
+
+class ThumbnailGenerator:
+    async def generate(self, file_path: Path) -> Optional[Path]:
+        try:
+            from PIL import Image
+            thumb_dir = config.data_dir / "thumbnails"
+            thumb_dir.mkdir(parents=True, exist_ok=True)
+            thumb_path = thumb_dir / f"thumb_{file_path.stem}.jpg"
+            if thumb_path.exists():
+                return thumb_path
+
+            if file_path.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"):
+                with Image.open(file_path) as img:
+                    img.thumbnail((320, 320))
+                    img.convert("RGB").save(thumb_path, "JPEG", quality=80)
+                return thumb_path
+        except Exception:
+            pass
+        return None
+
+
 async def _get_lock(key: str) -> asyncio.Lock:
     async with _locks_mutex:
         if key not in _active_locks:
@@ -45,27 +120,32 @@ async def _get_lock(key: str) -> asyncio.Lock:
         return _active_locks[key]
 
 
+# ---------------------------------------------------------------------------
+# Download Manager
+# ---------------------------------------------------------------------------
+
 class DownloadManager:
     def __init__(
         self,
-        task_repo: TaskRepository,
-        post_repo: PostRepository,
-        media_repo: MediaRepository,
-        author_repo: AuthorRepository,
-        tag_repo: TagRepository,
+        task_repo: Optional[TaskRepository] = None,
+        post_repo: Optional[PostRepository] = None,
+        media_repo: Optional[MediaRepository] = None,
+        author_repo: Optional[AuthorRepository] = None,
+        tag_repo: Optional[TagRepository] = None,
         broadcast_fn: Optional[BroadcastFn] = None,
     ) -> None:
-        self._task_repo = task_repo
-        self._post_repo = post_repo
-        self._media_repo = media_repo
-        self._author_repo = author_repo
-        self._tag_repo = tag_repo
+        self._task_repo = task_repo or TaskRepository()
+        self._post_repo = post_repo or PostRepository()
+        self._media_repo = media_repo or MediaRepository()
+        self._author_repo = author_repo or AuthorRepository()
+        self._tag_repo = tag_repo or TagRepository()
         self._broadcast = broadcast_fn or self._noop_broadcast
         self._instagram = InstagramClient()
         self._thumbnails = ThumbnailGenerator()
         self._human = HumanBehavior()
         self._semaphore = asyncio.Semaphore(1)
-        self._generic_sem = asyncio.Semaphore(config.downloader.max_concurrent_tasks)
+        max_tasks = getattr(config.downloader, "max_concurrent_tasks", getattr(config.downloader, "max_concurrent_downloads", 2))
+        self._generic_sem = asyncio.Semaphore(max_tasks)
         self._running = False
         self._worker_task: Optional[asyncio.Task] = None
         self._paused_tasks: Set[int] = set()
@@ -177,7 +257,11 @@ class DownloadManager:
                         pass
 
             from backend.services import settings_service
-            generic_max = int(settings_service.get("generic_concurrency"))
+            try:
+                generic_max = int(settings_service.get("generic_concurrency"))
+            except Exception:
+                generic_max = 2
+
             while len(generic_active) < generic_max:
                 queued = await self._task_repo.get_next_queued(url_filter="non_instagram")
                 if not queued:
@@ -221,7 +305,6 @@ class DownloadManager:
                 await tlog.error(f"Error: {exc}", traceback.format_exc())
                 logger.error("Task %d failed: %s\n%s", task_id, exc, traceback.format_exc())
 
-                from backend.services.downloader.instagram_client import InstagramFetchError
                 if isinstance(exc, InstagramFetchError):
                     ig_state = getattr(self._instagram, "_session_state", "unknown")
                     logger.warning("[IG_TASK] task=%s state=%s reason=%s url=%s", task_id, ig_state, exc.reason, url)
@@ -320,6 +403,8 @@ class DownloadManager:
             if dup:
                 fp.unlink(missing_ok=True)
                 fp = Path(dup["file_path"])
+                if not fp.is_absolute():
+                    fp = config.data_dir / fp
             stat = fp.stat()
 
             try:
@@ -420,6 +505,8 @@ class DownloadManager:
             if dup:
                 fp.unlink(missing_ok=True)
                 fp = Path(dup["file_path"])
+                if not fp.is_absolute():
+                    fp = config.data_dir / fp
             stat = fp.stat()
 
             try:
