@@ -100,14 +100,31 @@ class ThumbnailGenerator:
             thumb_dir = config.data_dir / "thumbnails"
             thumb_dir.mkdir(parents=True, exist_ok=True)
             thumb_path = thumb_dir / f"thumb_{file_path.stem}.jpg"
-            if thumb_path.exists():
-                return thumb_path
-
-            if file_path.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"):
+            
+            suffix = file_path.suffix.lower()
+            # 1. Caso Imágenes
+            if suffix in (".jpg", ".jpeg", ".png", ".webp"):
                 with Image.open(file_path) as img:
-                    img.thumbnail((320, 320))
-                    img.convert("RGB").save(thumb_path, "JPEG", quality=80)
+                    img.thumbnail((400, 400))
+                    img.convert("RGB").save(thumb_path, "JPEG", quality=85)
                 return thumb_path
+                
+            # 2. Caso Videos (mp4, mov, mkv, webm) usando OpenCV si está instalado
+            elif suffix in (".mp4", ".mov", ".mkv", ".webm"):
+                try:
+                    import cv2
+                    vid = cv2.VideoCapture(str(file_path))
+                    # Buscar el primer fotograma válido
+                    success, frame = vid.read()
+                    vid.release()
+                    if success:
+                        cv2.imwrite(str(thumb_path), frame)
+                        with Image.open(thumb_path) as img:
+                            img.thumbnail((400, 400))
+                            img.convert("RGB").save(thumb_path, "JPEG", quality=85)
+                        return thumb_path
+                except Exception:
+                    pass
         except Exception:
             pass
         return None

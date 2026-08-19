@@ -86,9 +86,6 @@ class DownloadCenterView {
     const el=document.getElementById('dlActiveTasks'); if(!el) return;
     const terminal=new Set(['completed','cancelled','error']);
     const active=[...this._tasks.values()].filter(t=>!terminal.has(t.status));
-    // El selector también puede mostrar estados históricos. El mapa evita
-    // duplicar una tarea que todavía aparece en /queue y /history durante una
-    // actualización de estado.
     const allById=new Map();
     (this._historyTasks||[]).forEach(t=>allById.set(t.id,t));
     [...this._tasks.values()].forEach(t=>allById.set(t.id,t));
@@ -119,6 +116,23 @@ class DownloadCenterView {
       completed:'Completado',error:'Error',paused:'Pausado',cancelled:'Cancelado'};
     const pct=Math.round(task.progress_pct||0);
     const shortUrl=(task.url||'').replace(/https?:\/\//,'').substring(0,55);
+    
+    // Parseo seguro de fecha para evitar "Invalid Date"
+    let dateStr = '—';
+    const rawDate = task.started_at || task.created_at || task.downloaded_at;
+    if (rawDate) {
+      try {
+        const d = (typeof rawDate === 'number') 
+          ? new Date(rawDate < 1e11 ? rawDate * 1000 : rawDate)
+          : new Date(String(rawDate).replace(' ', 'T'));
+        if (!isNaN(d.getTime())) {
+          dateStr = d.toLocaleString('es-AR', {
+            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+          });
+        }
+      } catch {}
+    }
+
     const card=document.createElement('div');
     card.className='dl-task-card status-'+task.status; card.id='task-card-'+task.id;
     card.innerHTML=`
@@ -138,7 +152,7 @@ class DownloadCenterView {
       <div class="dl-task-meta">
         ${task.attempt_count>1?`<span>🔄 Intento ${task.attempt_count}/${task.max_attempts}</span>`:''}
         ${task.bytes_downloaded?`<span>📦 ${humanSize(task.bytes_downloaded)}${task.bytes_total?' / '+humanSize(task.bytes_total):''}</span>`:''}
-        <span>🕐 ${formatDateTime(task.started_at||task.created_at)}</span>
+        <span>🕐 ${dateStr}</span>
       </div>
       <div class="dl-task-actions">
         ${['queued','downloading'].includes(task.status)?`<button class="btn-icon" data-action="pause" data-id="${task.id}" title="Pausar">⏸</button>`:''}
@@ -195,49 +209,38 @@ class DownloadCenterView {
   }
 
   _bindControls() {
-    // Actualizar
     document.getElementById('dlRefresh')?.addEventListener('click',async()=>{
       const b=document.getElementById('dlRefresh'); b.disabled=true; b.textContent='↻ Actualizando...';
       await this._loadInitialData(); b.disabled=false; b.textContent='↻ Actualizar'; showToast('Actualizado ✓','success');
     });
 
-    // Reanudar cola interrumpida
     document.getElementById('dlResumeQueue')?.addEventListener('click',async()=>{
       if(!confirm('¿Reanudar todas las tareas pausadas?')) return;
       try { const r=await fetch('/api/downloads/resume-queue',{method:'POST'}); const d=await r.json(); showToast(d.message,'success'); await this._loadInitialData(); }
       catch(e){showToast('Error: '+e.message,'error');}
     });
 
-    // Pausar todo
     document.getElementById('dlPauseAll')?.addEventListener('click',async()=>{
       if(!confirm('¿Pausar todas las tareas activas?')) return;
       try { const r=await fetch('/api/downloads/pause-all',{method:'POST'}); const d=await r.json(); showToast(d.message,'warning'); await this._loadInitialData(); }
       catch(e){showToast('Error: '+e.message,'error');}
     });
 
-    // Cancelar todo
     document.getElementById('dlCancelAll')?.addEventListener('click',async()=>{
       if(!confirm('¿Cancelar todas las tareas en cola?\nLos archivos ya descargados se conservan.')) return;
       try { const r=await fetch('/api/downloads/cancel-all',{method:'POST'}); const d=await r.json(); showToast(d.message,'warning'); await this._loadInitialData(); }
       catch(e){showToast('Error: '+e.message,'error');}
     });
 
-    // Limpiar historial
     document.getElementById('dlClearHistory')?.addEventListener('click',async()=>{
       if(!confirm('¿Eliminar del historial las tareas completadas, canceladas y con error?\nLos archivos descargados NO se borran.')) return;
       try { const r=await fetch('/api/downloads/clear-history',{method:'POST'}); const d=await r.json(); showToast(d.message,'success'); await this._loadInitialData(); }
       catch(e){showToast('Error: '+e.message,'error');}
     });
 
-    // Filtrar tareas activas por estado
     document.getElementById('dlActiveStatusFilter')?.addEventListener('change',()=>this._renderActiveTasks());
-
-    // Limpiar log de eventos
     document.getElementById('dlClearLog')?.addEventListener('click',()=>{const e=document.getElementById('dlEventLog');if(e)e.innerHTML='';});
 
-    // Comprobación visible con navegador autorizado. No comparte cookies ni
-    // intenta evadir controles: abre un perfil Playwright persistente para
-    // que el usuario pueda iniciar sesión manualmente si hace falta.
     document.getElementById('dlIgBrowserProbe')?.addEventListener('click', async () => {
       const url = window.prompt('Pegá una URL de publicación de Instagram para probar en el navegador:');
       if (!url) return;
@@ -255,13 +258,11 @@ class DownloadCenterView {
       }
     });
 
-    // Login Instagram
     document.getElementById('dlLoginBtn')?.addEventListener('click', () => {
       document.getElementById('modalLogin').style.display = '';
       window.syncInstagramLoginFields?.();
     });
 
-    // Estadísticas de errores
     document.getElementById('dlRetryErrors')?.addEventListener('click', async () => {
       if (!confirm('¿Reintentar TODAS las descargas con error? Se resetea el contador de intentos y vuelven a la cola.')) return;
       const btn = document.getElementById('dlRetryErrors');
@@ -287,12 +288,6 @@ class DownloadCenterView {
     const panel = document.getElementById('dlStatsPanel');
     panel.innerHTML = '<div class="loading-center"><div class="spinner"></div></div>';
     try {
-      // FIX: antes usaba getHistory(500) filtrado del lado del cliente —
-      // ese endpoint devuelve los "más recientes" capados a 200 en el
-      // backend, y si las descargas exitosas fueron más recientes que
-      // los errores, el filtro nunca encontraba ninguno aunque hubiera
-      // miles acumulados. Ahora pega directo a /api/downloads/errors,
-      // que filtra por status='error' en la consulta SQL.
       const failed = await fetch('/api/downloads/errors?limit=1000').then(r=>r.json());
       if (!failed.length) {
         panel.innerHTML = '<div class="text-sm text-muted">✓ Sin descargas con error.</div>';
@@ -328,9 +323,6 @@ class DownloadCenterView {
         <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:8px">Detalle (últimas ${Math.min(failed.length,150)}) — 🔍 muestra el traceback/respuesta completa</div>
         ${rows}`;
 
-      // Botón 🔍 por fila: trae los logs guardados de esa tarea (incluye
-      // el traceback completo, que ya se guarda en download_logs.details
-      // pero antes no se mostraba en ningún lado accesible).
       panel.querySelectorAll('[data-task-id]').forEach(btn => {
         btn.addEventListener('click', async () => {
           const taskId = btn.dataset.taskId;
@@ -367,14 +359,10 @@ class DownloadCenterView {
       const p=document.getElementById('pct-'+e.task_id); if(p) p.textContent=Math.round(e.progress||0)+'%';
       const bar=document.querySelector('#task-card-'+e.task_id+' .progress-bar'); if(bar) bar.style.width=Math.round(e.progress||0)+'%';
     });
-    // FIX: dlStatSpeed quedaba siempre en "—" porque nunca se conectó a
-    // ningún evento. file_progress (restaurado en el backend) trae
-    // speed_bps mientras hay una descarga de archivo activa.
     ws.on('file_progress', (e)=>{
       const el=document.getElementById('dlStatSpeed'); if(!el) return;
       el.textContent = e.speed_bps ? humanSpeed(e.speed_bps) : '—';
       clearTimeout(this._speedResetTimer);
-      // Si no llega otra actualización en 3s, volver a "—" (descarga terminó)
       this._speedResetTimer = setTimeout(()=>{ if(el) el.textContent='—'; }, 3000);
     });
     ws.on('task_completed',(e)=>{this._appendLog('✅ Finalizado post '+e.post_id,'success'); this._tasks.delete(e.task_id); setTimeout(()=>this._loadInitialData(),400);});

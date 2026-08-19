@@ -18,7 +18,7 @@ async function apiFetch(path, options = {}) {
   const url = `${API_BASE}${path}`;
   const res = await fetch(url, {
     headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
-    ...options,
+    ...options
   });
   if (!res.ok) {
     let detail = '';
@@ -52,11 +52,11 @@ const DownloadsAPI = {
         username,
         password: effectiveMethod === 'password' ? password : '',
         method: effectiveMethod,
-        sessionid: cleanSessionid,
-      }),
+        sessionid: cleanSessionid
+      })
     });
   },
-  getEventHistory: (limit = 100)        => apiFetch(`/api/downloads/history/events?limit=${limit}`),
+  getEventHistory: (limit = 100)        => apiFetch(`/api/downloads/history/events?limit=${limit}`)
 };
 
 // ── Library ────────────────────────────────────────────────────────────────
@@ -69,6 +69,9 @@ const LibraryAPI = {
   toggleFavorite: (id, val)             => apiFetch(`/api/library/posts/${id}/favorite`, { method: 'PATCH', body: JSON.stringify({ is_favorite: val }) }),
   updateNotes:    (id, notes)           => apiFetch(`/api/library/posts/${id}/notes`, { method: 'PATCH', body: JSON.stringify({ notes }) }),
   deletePost:     (id)                  => apiFetch(`/api/library/posts/${id}`, { method: 'DELETE' }),
+
+  regenerateThumbnails: (postId)        => apiFetch(`/api/library/posts/${postId}/regenerate-thumbnails`, { method: 'POST' }),
+  redownloadPost:       (postId)        => apiFetch(`/api/library/posts/${postId}/redownload`, { method: 'POST' }),
 
   getAuthors:     ()                    => apiFetch('/api/library/authors'),
   getAuthorPosts: (username, page, pp)  => apiFetch(`/api/library/authors/${encodeURIComponent(username)}/posts?page=${page}&per_page=${pp}`),
@@ -83,7 +86,7 @@ const LibraryAPI = {
   removeFromCollection: (colId, postId) => apiFetch(`/api/library/collections/${colId}/posts/${postId}`, { method: 'DELETE' }),
   getCollectionPosts: (colId, page, pp) => apiFetch(`/api/library/collections/${colId}/posts?page=${page}&per_page=${pp}`),
 
-  getFavorites:   (page = 1, pp = 50)   => apiFetch(`/api/library/favorites?page=${page}&per_page=${pp}`),
+  getFavorites:   (page = 1, pp = 50)   => apiFetch(`/api/library/favorites?page=${page}&per_page=${pp}`)
 };
 
 // ── Search ─────────────────────────────────────────────────────────────────
@@ -94,7 +97,7 @@ const SearchAPI = {
   )),
   suggestions:  (q)            => apiFetch(`/api/search/suggestions?q=${encodeURIComponent(q)}`),
   byColor:      (hex)          => apiFetch(`/api/search/by-color?hex_color=${encodeURIComponent(hex)}`),
-  byOcr:        (q)            => apiFetch(`/api/search/by-ocr?q=${encodeURIComponent(q)}`),
+  byOcr:        (q)            => apiFetch(`/api/search/by-ocr?q=${encodeURIComponent(q)}`)
 };
 
 // ── Stats ──────────────────────────────────────────────────────────────────
@@ -105,7 +108,7 @@ const StatsAPI = {
   health:        ()   => apiFetch('/api/stats/health'),
   duplicates:    ()   => apiFetch('/api/stats/duplicates'),
   reindexFts:    ()   => apiFetch('/api/stats/health/reindex-fts', { method: 'POST' }),
-  queueSummary:  ()   => apiFetch('/api/stats/queue/summary'),
+  queueSummary:  ()   => apiFetch('/api/stats/queue/summary')
 };
 
 // ── Utilities ──────────────────────────────────────────────────────────────
@@ -133,19 +136,10 @@ function humanEta(seconds) {
   return `${h}h ${mm}m`;
 }
 
-function formatDate(iso) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('es-AR', {
-    year: 'numeric', month: 'short', day: 'numeric'
-  });
+);
 }
 
-function formatDateTime(iso) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleString('es-AR', {
-    year: 'numeric', month: 'short', day: 'numeric',
-    hour: '2-digit', minute: '2-digit'
-  });
+);
 }
 
 function postTypeLabel(type) {
@@ -158,33 +152,19 @@ function postTypeIcon(type) {
   return map[type] || '📄';
 }
 
-/**
- * Convert a stored file path (absolute or relative) to a browser-accessible URL.
- * Handles:
- * - Windows absolute paths: C:\Users\...\data\thumbnails\ab\cd\hash.webp
- * - Windows with forward slashes: C:/Users/.../data/thumbnails/ab/cd/hash.webp
- * - Relative paths: thumbnails/ab/cd/hash.webp
- * - Full URLs (http/https)
- */
 function thumbUrl(path) {
   if (!path) return null;
   if (path.startsWith('http')) return path;
 
-  // Normalize Windows backslashes to forward slashes
   let normalized = path.replace(/\\/g, '/');
-
-  // Strip Windows drive letter (e.g., C:/ or C:/)
   normalized = normalized.replace(/^[A-Z]:\//i, '/');
 
-  // If path already starts with /thumbnails/ or thumbnails/, return it
   if (normalized.startsWith('/thumbnails/')) return normalized;
   if (normalized.startsWith('thumbnails/')) return '/' + normalized;
 
-  // Find /thumbnails/ anywhere in the path
   const thumbIdx = normalized.indexOf('/thumbnails/');
   if (thumbIdx !== -1) return normalized.substring(thumbIdx);
 
-  // Last resort: extract the filename and serve from /thumbnails/
   const parts = normalized.split('/');
   const name = parts[parts.length - 1];
   if (name && name.length > 4) return `/thumbnails/${name}`;
@@ -192,36 +172,70 @@ function thumbUrl(path) {
   return null;
 }
 
-/**
- * Convert a stored file path (absolute or relative) to a browser-accessible URL.
- * Handles:
- * - Windows absolute paths: C:\Users\...\data\media\ab\shortcode\file.jpg
- * - Windows with forward slashes: C:/Users/.../data/media/ab/shortcode/file.jpg
- * - Relative paths: media/ab/shortcode/file.jpg
- * - Full URLs (http/https)
- */
 function mediaUrl(path) {
   if (!path) return null;
   if (path.startsWith('http')) return path;
 
-  // Normalize Windows backslashes to forward slashes
   let normalized = path.replace(/\\/g, '/');
-
-  // Strip Windows drive letter (e.g., C:/ or C:/)
   normalized = normalized.replace(/^[A-Z]:\//i, '/');
 
-  // If path already starts with /media/ or media/, return it
   if (normalized.startsWith('/media/')) return normalized;
   if (normalized.startsWith('media/')) return '/' + normalized;
 
-  // Find /media/ anywhere in the path
   const mediaIdx = normalized.indexOf('/media/');
   if (mediaIdx !== -1) return normalized.substring(mediaIdx);
 
-  // Last resort: extract the filename and serve from /media/
   const parts = normalized.split('/');
   const name = parts[parts.length - 1];
   if (name && name.length > 4) return `/media/${name}`;
 
   return null;
+}
+
+function parseSafeDate(val) {
+  if (!val) return null;
+  // Si es un timestamp numérico (ej: 1718723456)
+  if (typeof val === 'number') {
+    // Si viene en segundos (10 dígitos), convertir a milisegundos
+    return new Date(val < 1e11 ? val * 1000 : val);
+  }
+  if (typeof val === 'string') {
+    const trimmed = val.trim();
+    if (!trimmed || trimmed === 'null' || trimmed === 'None') return null;
+    // Si es un número en string
+    if (/^\d+$/.test(trimmed)) {
+      const num = parseInt(trimmed, 10);
+      return new Date(num < 1e11 ? num * 1000 : num);
+    }
+    // Parseo estándar ISO / SQL
+    const d = new Date(trimmed.replace(' ', 'T'));
+    if (!isNaN(d.getTime())) return d;
+  }
+  const d = new Date(val);
+  return !isNaN(d.getTime()) ? d : null;
+}
+
+function formatDate(iso) {
+  const d = parseSafeDate(iso);
+  if (!d) return '—';
+  try {
+    return d.toLocaleDateString('es-AR', {
+      year: 'numeric', month: 'short', day: 'numeric'
+    });
+  } catch {
+    return '—';
+  }
+}
+
+function formatDateTime(iso) {
+  const d = parseSafeDate(iso);
+  if (!d) return '—';
+  try {
+    return d.toLocaleString('es-AR', {
+      year: 'numeric', month: 'short', day: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+  } catch {
+    return '—';
+  }
 }

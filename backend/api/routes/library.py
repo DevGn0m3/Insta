@@ -16,7 +16,10 @@ from fastapi import APIRouter, HTTPException, Query
 from backend.models import CollectionCreate, PostType, SearchQuery
 from backend.repositories.post_repository import PostRepository
 from backend.repositories.media_repository import AuthorRepository, MediaRepository, TagRepository
+from backend.repositories.task_repository import DownloadTaskRepository
+from backend.services.downloader.download_manager import ThumbnailGenerator, relative_to_data
 from backend.database.connection import get_db
+from backend.config import config
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/library", tags=["library"])
@@ -32,12 +35,8 @@ async def list_posts(
     sort_dir:    str                = Query("desc"),
     post_type:   Optional[PostType] = Query(None),
     is_favorite: Optional[bool]     = Query(None),
-    author:      Optional[str]      = Query(None),  # también sirve como filtro de dominio
+    author:      Optional[str]      = Query(None),
 ) -> dict[str, Any]:
-    """
-    List posts with full filter support: post_type, is_favorite, author/domain,
-    plus sorting and pagination.
-    """
     repo = PostRepository()
     q = SearchQuery(
         page=page,
@@ -58,12 +57,6 @@ async def list_posts(
 
 @router.get("/domains")
 async def list_domains() -> list[dict[str, Any]]:
-    """
-    Dominios de origen para posts que NO son de Instagram (para el filtro
-    de dominio en la Biblioteca). El username del autor ya ES el dominio
-    para sitios genéricos/noticias/LinkedIn (así los guarda download_manager
-    cuando el extractor no reporta un autor explícito).
-    """
     async with get_db() as db:
         cur = await db.execute(
             """
@@ -124,13 +117,72 @@ async def update_notes(post_id: int, payload: dict[str, str]) -> dict[str, Any]:
     return {"post_id": post_id, "notes": payload.get("notes", "")}
 
 
+# ── Acciones: Regenerar Miniatura & Redescargar ──────────────────────────────
+
+@router.post("/posts/{post_id}/regenerate-thumbnails")
+@router.get("/posts/{post_id}/regenerate-thumbnails")
+async def regenerate_thumbnails(post_id: int):
+    """Regenera miniaturas para los archivos multimedia existentes de un post (video o imagen)."""
+    media_repo = MediaRepository()
+    media_rows = await media_repo.get_by_post(post_id)
+    if not media_rows:
+        raise HTTPException(status_code=404, detail="El post no tiene archivos multimedia asociados")
+    
+    thumb_gen = ThumbnailGenerator()
+    updated = 0
+    for row in media_rows:
+        fp = Path(row["file_path"])
+        if not fp.is_absolute():
+            fp = config.data_dir / fp
+        if fp.exists():
+            thumb = await thumb_gen.generate(fp)
+            if thumb:
+                await media_repo.update_thumbnail(row["id"], relative_to_data(thumb))
+                updated += 1
+                
+    if updated == 0:
+        raise HTTPException(status_code=400, detail="No se pudo generar miniatura. Verifica que el archivo de video o imagen exista en disco.")
+        
+    return {"status": "ok", "updated_thumbnails": updated}
+
+
+@router.post("/posts/{post_id}/redownload")
+@router.get("/posts/{post_id}/redownload")
+async def redownload_post(post_id: int):
+    """Elimina los datos locales corruptos y vuelve a descargar el post desde su URL original."""
+    post_repo = PostRepository()
+    post = await post_repo.get_by_id(post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post no encontrado")
+        
+    url = post.get("original_url")
+    if not url:
+        shortcode = post.get("shortcode")
+        url = f"https://www.instagram.com/p/{shortcode}/"
+        
+    # Borrar archivos multimedia viejos del disco
+    media_repo = MediaRepository()
+    media_rows = await media_repo.get_by_post(post_id)
+    for row in media_rows:
+        for p in (row.get("file_path"), row.get("thumbnail_path")):
+            if p:
+                fp = Path(p)
+                if not fp.is_absolute():
+                    fp = config.data_dir / fp
+                fp.unlink(missing_ok=True)
+        
+    # Borrar registro en base de datos
+    await post_repo.delete(post_id)
+    
+    # Encolar de nuevo con máxima prioridad
+    task_repo = DownloadTaskRepository()
+    task_ids = await task_repo.enqueue_many([url], priority=10)
+    
+    return {"status": "ok", "queued_task_id": task_ids[0] if task_ids else None}
+
+
 @router.delete("/posts/{post_id}")
 async def delete_post(post_id: int) -> dict[str, Any]:
-    """
-    Borra la card completa: registro del post en la DB (cascada elimina
-    media_files/post_tags vía ON DELETE CASCADE) Y los archivos físicos
-    asociados (media + thumbnails) del disco.
-    """
     async with get_db() as db:
         cur = await db.execute(
             "SELECT file_path, thumbnail_path FROM media_files WHERE post_id = ?",
@@ -149,7 +201,10 @@ async def delete_post(post_id: int) -> dict[str, Any]:
             p = row.get(key)
             if p:
                 try:
-                    Path(p).unlink(missing_ok=True)
+                    fp = Path(p)
+                    if not fp.is_absolute():
+                        fp = config.data_dir / fp
+                    fp.unlink(missing_ok=True)
                     deleted_files += 1
                 except Exception as exc:
                     logger.warning("No se pudo borrar %s: %s", p, exc)
@@ -159,11 +214,6 @@ async def delete_post(post_id: int) -> dict[str, Any]:
 
 @router.delete("/media/{media_id}")
 async def delete_media(media_id: int) -> dict[str, Any]:
-    """
-    Borra UN archivo individual dentro de una card: su registro en
-    media_files y sus archivos físicos (original + thumbnail). NO toca
-    la card (post) ni el resto de sus archivos.
-    """
     async with get_db() as db:
         cur = await db.execute(
             "SELECT id, post_id, file_path, thumbnail_path FROM media_files WHERE id = ?",
@@ -175,7 +225,6 @@ async def delete_media(media_id: int) -> dict[str, Any]:
         row = dict(row)
 
         await db.execute("DELETE FROM media_files WHERE id = ?", (media_id,))
-        # Reflejar el conteo real de archivos restantes en la card
         await db.execute(
             "UPDATE posts SET media_count = (SELECT COUNT(*) FROM media_files WHERE post_id = ?) WHERE id = ?",
             (row["post_id"], row["post_id"]),
@@ -185,7 +234,10 @@ async def delete_media(media_id: int) -> dict[str, Any]:
         p = row.get(key)
         if p:
             try:
-                Path(p).unlink(missing_ok=True)
+                fp = Path(p)
+                if not fp.is_absolute():
+                    fp = config.data_dir / fp
+                fp.unlink(missing_ok=True)
             except Exception as exc:
                 logger.warning("No se pudo borrar %s: %s", p, exc)
 
@@ -359,3 +411,45 @@ async def list_favorites(
         "pages": (total + per_page - 1) // per_page,
         "posts": posts,
     }
+
+@router.post("/posts/regenerate-all-thumbnails")
+@router.get("/posts/regenerate-all-thumbnails")
+async def regenerate_all_thumbnails():
+    """Busca todos los medios sin miniatura o con miniatura rota y las genera en masa."""
+    thumb_gen = ThumbnailGenerator()
+    updated = 0
+    errors = 0
+
+    async with get_db() as db:
+        cur = await db.execute("SELECT id, post_id, file_path, thumbnail_path FROM media_files")
+        rows = [dict(r) for r in await cur.fetchall()]
+
+    for row in rows:
+        thumb_path_val = row.get("thumbnail_path")
+        needs_regen = not thumb_path_val
+
+        if not needs_regen:
+            tp = Path(thumb_path_val)
+            if not tp.is_absolute():
+                tp = config.data_dir / tp
+            if not tp.exists():
+                needs_regen = True
+
+        if needs_regen:
+            fp = Path(row["file_path"])
+            if not fp.is_absolute():
+                fp = config.data_dir / fp
+            if fp.exists():
+                try:
+                    new_thumb = await thumb_gen.generate(fp)
+                    if new_thumb:
+                        async with get_db() as db:
+                            await db.execute(
+                                "UPDATE media_files SET thumbnail_path = ? WHERE id = ?",
+                                (relative_to_data(new_thumb), row["id"]),
+                            )
+                        updated += 1
+                except Exception:
+                    errors += 1
+
+    return {"status": "ok", "total_checked": len(rows), "updated": updated, "errors": errors}

@@ -1,10 +1,102 @@
+/**
+ * Library View Component
+ */
+
+// Función para regenerar todos los previews faltantes en masa
+window.handleRegenerateAllThumbs = async function(e) {
+  const btn = e ? e.currentTarget : document.getElementById('btnRegenAll');
+  if (!confirm('¿Deseas escanear y generar todas las miniaturas faltantes de tu biblioteca?')) return;
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Procesando...';
+    btn.style.opacity = '0.7';
+  }
+  try {
+    const res = await fetch('/api/library/posts/regenerate-all-thumbnails', { method: 'POST' });
+    const data = await res.json();
+    if (res.ok) {
+      const msg = `¡Completado! Se generaron ${data.updated || data.updated_thumbnails || 0} miniaturas nuevas.`;
+      if (typeof showToast === 'function') showToast(msg, 'success');
+      else alert(msg);
+      if (window._currentLibraryView) window._currentLibraryView._loadPosts();
+    } else {
+      alert('Error: ' + (data.detail || 'No se pudo completar'));
+    }
+  } catch (err) {
+    alert('Error al comunicar con el servidor: ' + err.message);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '🪄 Regenerar previews';
+      btn.style.opacity = '1';
+    }
+  }
+};
+
+// Funciones globales para acciones rápidas
+window.handleRegenerateThumb = async function(e, postId) {
+  if (e) { e.stopPropagation(); e.preventDefault(); }
+  const btn = e ? e.currentTarget : null;
+  if (btn) { btn.style.opacity = '0.5'; btn.disabled = true; }
+  try {
+    const res = await LibraryAPI.regenerateThumbnails(postId);
+    if (typeof showToast === 'function') {
+      showToast('Miniatura regenerada con éxito', 'success');
+    } else {
+      alert('Miniatura regenerada con éxito.');
+    }
+    if (window._currentLibraryView) {
+      window._currentLibraryView._loadPosts();
+    }
+  } catch (err) {
+    const msg = err.detail || err.message || 'No se pudo regenerar. Prueba con Redescargar.';
+    if (typeof showToast === 'function') {
+      showToast(msg, 'error');
+    } else {
+      alert(msg);
+    }
+  } finally {
+    if (btn) { btn.style.opacity = '1'; btn.disabled = false; }
+  }
+};
+
+window.handleRedownloadPost = async function(e, postId) {
+  if (e) { e.stopPropagation(); e.preventDefault(); }
+  if (!confirm('¿Deseas volver a descargar este post desde Instagram? Se borrarán los datos viejos y se iniciará una nueva descarga limpia.')) return;
+  const btn = e ? e.currentTarget : null;
+  if (btn) { btn.style.opacity = '0.5'; btn.disabled = true; }
+  try {
+    await LibraryAPI.redownloadPost(postId);
+    if (typeof showToast === 'function') {
+      showToast('¡Descarga encolada! Mira el progreso en Descargas.', 'success');
+    } else {
+      alert('¡Descarga encolada de nuevo!');
+    }
+    const modal = document.getElementById('modalPost');
+    if (modal) modal.style.setProperty('display', 'none', 'important');
+    if (window._currentLibraryView) {
+      window._currentLibraryView._loadPosts();
+    }
+  } catch (err) {
+    const msg = err.detail || err.message || 'Error al reencolar descarga';
+    if (typeof showToast === 'function') {
+      showToast(msg, 'error');
+    } else {
+      alert(msg);
+    }
+  } finally {
+    if (btn) { btn.style.opacity = '1'; btn.disabled = false; }
+  }
+};
+
 class LibraryView {
   constructor(container) {
     this._container = container;
     this._page = 1; this._perPage = 50; this._totalPages = 1;
     this._filter = 'all'; this._sortBy = 'downloaded_at'; this._sortDir = 'desc';
-    this._domain = ''; // filtro de dominio (author_username para sitios no-Instagram)
+    this._domain = '';
     this._activeCarousel = null; this._posts = [];
+    window._currentLibraryView = this;
   }
 
   async init() { this._render(); await this._loadDomains(); await this._loadPosts(); this._bindEvents(); }
@@ -16,7 +108,12 @@ class LibraryView {
           <div class="section-title">Biblioteca</div>
           <div class="section-subtitle" id="libSubtitle">Cargando...</div>
         </div>
-        <div class="flex gap-8">
+        <div class="flex gap-8" style="align-items:center;">
+          <!-- Botón de regeneración masiva -->
+          <button id="btnRegenAll" onclick="handleRegenerateAllThumbs(event)" class="btn-secondary" title="Generar miniaturas para todos los posts que aún no tengan preview" style="font-size:.82rem; padding:6px 12px; display:flex; align-items:center; gap:6px; background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.4); color:#a5b4fc; border-radius:8px; cursor:pointer;">
+            🪄 Regenerar previews
+          </button>
+          
           <select id="libDomainFilter" class="form-select" style="width:auto;padding:6px 10px;font-size:.82rem;">
             <option value="">🌐 Todos los dominios</option>
           </select>
@@ -93,10 +190,23 @@ class LibraryView {
   _buildCard(post) {
     const card = document.createElement('div');
     card.className = 'post-card'; card.dataset.postId = post.id;
+    card.style.position = 'relative';
     const thumb = thumbUrl(post.cover_thumbnail);
     card.innerHTML = `
+      <!-- Botones flotantes en la Card -->
+      <div class="card-quick-actions" style="position:absolute; top:8px; right:8px; display:flex; gap:5px; z-index:40;" onclick="event.stopPropagation();">
+        <button type="button" onclick="handleRegenerateThumb(event, ${post.id})" title="Regenerar miniatura (preview)" style="background:rgba(20,20,25,0.85); color:#60a5fa; border:1px solid rgba(255,255,255,0.15); border-radius:6px; padding:4px 7px; cursor:pointer; font-size:12px; backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center;">
+          🔄
+        </button>
+        <button type="button" onclick="handleRedownloadPost(event, ${post.id})" title="Volver a descargar post completo" style="background:rgba(20,20,25,0.85); color:#fbbf24; border:1px solid rgba(255,255,255,0.15); border-radius:6px; padding:4px 7px; cursor:pointer; font-size:12px; backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center;">
+          📥
+        </button>
+      </div>
+
       ${thumb ? `<img class="post-card-thumb" src="${thumb}" alt="thumb" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
-      <div class="post-card-thumb-placeholder" style="${thumb?'display:none':''}"> ${postTypeIcon(post.post_type)} </div>
+      <div class="post-card-thumb-placeholder" style="${thumb?'display:none':''}">
+        ${postTypeIcon(post.post_type)}
+      </div>
       <div class="post-card-overlay">
         <span class="post-type-badge ${post.post_type}">${post.post_type}</span>
         <button class="post-card-fav ${post.is_favorite?'active':''}" data-post-id="${post.id}">${post.is_favorite?'❤️':'🤍'}</button>
@@ -107,7 +217,12 @@ class LibraryView {
         ${post.caption?`<div class="post-card-caption">${escapeHtml((post.caption||'').substring(0,100))}</div>`:''}
         <div class="post-card-meta"><span>${formatDate(post.posted_at||post.downloaded_at)}</span></div>
       </div>`;
-    card.addEventListener('click', (e) => { if(e.target.closest('.post-card-fav'))return; this._openPostViewer(post.id); });
+      
+    card.addEventListener('click', (e) => { 
+      if (e.target.closest('.post-card-fav') || e.target.closest('.card-quick-actions')) return; 
+      this._openPostViewer(post.id); 
+    });
+    
     card.querySelector('.post-card-fav').addEventListener('click', async(e) => {
       e.stopPropagation();
       const newVal = !post.is_favorite; post.is_favorite = newVal;
@@ -150,7 +265,6 @@ class LibraryView {
             <div class="ml-auto flex gap-8">
               <button class="btn-icon pv-fav ${post.is_favorite?'active':''}">${post.is_favorite?'❤️':'🤍'}</button>
               <a href="${post.original_url}" target="_blank" class="btn-icon" title="Ver original">🔗</a>
-              <!-- X está en index.html (.post-close-btn), no duplicar acá -->
             </div>
           </div>
           <div class="post-viewer-body">
@@ -168,16 +282,17 @@ class LibraryView {
               <tr><td>Archivos</td><td>${(post.media_files||[]).length}</td></tr>
             </table>
           </div>
-          <div class="post-viewer-actions">
+          <div class="post-viewer-actions" style="display:flex; flex-wrap:wrap; gap:8px;">
             <button class="btn-secondary" onclick="navigator.clipboard.writeText('${post.original_url}')">📋 Copiar URL</button>
             <button class="btn-secondary" id="pvAddTag">🏷️ Etiqueta</button>
+            <button class="btn-secondary" onclick="handleRegenerateThumb(event, ${post.id})" title="Regenerar miniatura">🔄 Miniatura</button>
+            <button class="btn-secondary" onclick="handleRedownloadPost(event, ${post.id})" style="color:var(--color-warning)" title="Volver a descargar">📥 Redescargar</button>
             <button class="btn-secondary" id="pvDeleteImg" title="Eliminar imagen actual" style="color:var(--color-warning)">🗑️ Imagen</button>
             <button class="btn-secondary" id="pvDeletePost" title="Eliminar toda la card" style="color:var(--color-error)">🗑️ Card</button>
           </div>
         </div>
       </div>`;
 
-    // Media
     const mediaContainer = container.querySelector('#pvMedia');
     const mediaFiles = (post.media_files||[]).filter(f=>f.file_type!=='thumbnail'&&f.file_type!=='document');
     if (mediaFiles.length > 1) {
@@ -193,7 +308,6 @@ class LibraryView {
       mediaContainer.innerHTML = `<div class="empty-state"><div class="empty-icon">🖼️</div><div class="empty-title">Sin archivos media</div></div>`;
     }
 
-    // Click en imagen -> zoom en popup/lightbox
     mediaContainer.addEventListener('click', (e) => {
       const img = e.target.closest('img');
       if (img && img.src) this._openLightbox(img.src);
@@ -209,35 +323,33 @@ class LibraryView {
 
     container.querySelector('#pvAddTag')?.addEventListener('click', async() => {
       const name = prompt('Nombre de la etiqueta:');
-      if (name?.trim()) { await LibraryAPI.addTag(post.id, name.trim()).catch(()=>{}); showToast('Etiqueta agregada','success'); }
+      if (name?.trim()) { await LibraryAPI.addTag(post.id, name.trim()).catch(()=>{}); if(typeof showToast==='function') showToast('Etiqueta agregada','success'); }
     });
 
-    // Eliminar imagen individual (la que está visible en ese momento)
     container.querySelector('#pvDeleteImg')?.addEventListener('click', async () => {
-      if (!mediaFiles.length) { showToast('No hay imágenes para eliminar','warning'); return; }
+      if (!mediaFiles.length) { if(typeof showToast==='function') showToast('No hay imágenes para eliminar','warning'); return; }
       const idx = this._activeCarousel ? this._activeCarousel._current : 0;
       const target = mediaFiles[idx];
-      if (!target?.id) { showToast('No se pudo identificar el archivo','error'); return; }
+      if (!target?.id) { if(typeof showToast==='function') showToast('No se pudo identificar el archivo','error'); return; }
       if (!confirm('¿Eliminar esta imagen? Esta acción no se puede deshacer.')) return;
       try {
         await fetch(`/api/library/media/${target.id}`, { method:'DELETE' });
-        showToast('Imagen eliminada','success');
+        if(typeof showToast==='function') showToast('Imagen eliminada','success');
         const refreshed = await LibraryAPI.getPost(post.id);
         this._renderPostViewer(refreshed, container);
-      } catch(err) { showToast('Error: '+err.message,'error'); }
+      } catch(err) { if(typeof showToast==='function') showToast('Error: '+err.message,'error'); }
     });
 
-    // Eliminar card completa
     container.querySelector('#pvDeletePost')?.addEventListener('click', async () => {
       if (!confirm('¿Eliminar esta card completa? Se borrarán todos sus archivos del disco. Esta acción no se puede deshacer.')) return;
       try {
         await fetch(`/api/library/posts/${post.id}`, { method:'DELETE' });
-        showToast('Card eliminada','success');
+        if(typeof showToast==='function') showToast('Card eliminada','success');
         document.getElementById('modalPost').style.setProperty('display','none','important');
         const card = document.querySelector(`.post-card[data-post-id="${post.id}"]`);
         if (card) card.remove();
         await this._loadPosts();
-      } catch(err) { showToast('Error: '+err.message,'error'); }
+      } catch(err) { if(typeof showToast==='function') showToast('Error: '+err.message,'error'); }
     });
   }
 
@@ -300,7 +412,9 @@ class LibraryView {
     });
     this._container.querySelector('#viewGrid')?.addEventListener('click', ()=>this._gridEl.className='post-grid');
     this._container.querySelector('#viewLarge')?.addEventListener('click', ()=>this._gridEl.className='post-grid view-large');
-    ws.on('task_completed', ()=>{ if(this._page===1) this._loadPosts(); });
+    if (typeof ws !== 'undefined' && ws.on) {
+      ws.on('task_completed', ()=>{ if(this._page===1) this._loadPosts(); });
+    }
   }
 
   async refresh() { this._page=1; await this._loadPosts(); }

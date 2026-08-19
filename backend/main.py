@@ -94,10 +94,8 @@ app.include_router(settings.router)
 async def websocket_endpoint(websocket: WebSocket):
     await ws_manager.connect(websocket)
     try:
-        # Send initial state on connection
         summary = await download_manager.get_queue_summary()
         await websocket.send_json({"type": "connected", "queue_summary": summary})
-        # Keep connection alive (client sends pings)
         while True:
             data = await websocket.receive_text()
             if data == "ping":
@@ -107,21 +105,18 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 # ── Static file serving ───────────────────────────────────────────────────────
-# Serve downloaded media files
 app.mount(
     "/media",
     StaticFiles(directory=str(config.media_dir), html=False),
     name="media",
 )
 
-# Serve generated thumbnails
 app.mount(
     "/thumbnails",
     StaticFiles(directory=str(config.thumbnails_dir), html=False),
     name="thumbnails",
 )
 
-# Serve frontend static assets
 frontend_dir = config.frontend_dir
 if frontend_dir.exists():
     app.mount(
@@ -135,7 +130,6 @@ if frontend_dir.exists():
 @app.get("/")
 @app.get("/{full_path:path}")
 async def serve_spa(full_path: str = ""):
-    # Don't intercept API or static routes
     if full_path.startswith(("api/", "ws", "media/", "thumbnails/", "assets/")):
         from fastapi import HTTPException
         raise HTTPException(status_code=404)
@@ -145,7 +139,6 @@ async def serve_spa(full_path: str = ""):
     return {"message": "Frontend not found. Place frontend files in /frontend/"}
 
 
-# ── Dev runner ────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
