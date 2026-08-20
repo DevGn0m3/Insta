@@ -25,6 +25,7 @@ class DownloadCenterView {
         <div class="dl-stat-card"><div class="dl-stat-label">⬇️ Activas</div><div class="dl-stat-value accent" id="dlStatActive">0</div></div>
         <div class="dl-stat-card"><div class="dl-stat-label">⏳ En cola</div><div class="dl-stat-value" id="dlStatQueued">0</div></div>
         <div class="dl-stat-card"><div class="dl-stat-label">✅ Completadas</div><div class="dl-stat-value success" id="dlStatDone">0</div></div>
+        <div class="dl-stat-card"><div class="dl-stat-label">🗑️ Inexistentes</div><div class="dl-stat-value" style="color:#9ca3af" id="dlStatNotFound">0</div></div>
         <div class="dl-stat-card"><div class="dl-stat-label">❌ Errores</div><div class="dl-stat-value error" id="dlStatError">0</div></div>
         <div class="dl-stat-card"><div class="dl-stat-label">⏸️ Pausadas</div><div class="dl-stat-value warning" id="dlStatPaused">0</div></div>
         <div class="dl-stat-card"><div class="dl-stat-label">⚡ Velocidad</div><div class="dl-stat-value" id="dlStatSpeed">—</div></div>
@@ -34,15 +35,13 @@ class DownloadCenterView {
         <div class="section-title" style="font-size:.92rem">Tareas activas</div>
         <div class="dl-status-filter-wrap">
           <label for="dlActiveStatusFilter" class="dl-status-filter-label">Filtrar por estado</label>
-          <select id="dlActiveStatusFilter" class="dl-status-filter" aria-label="Filtrar tareas activas e historial por estado">
+          <select id="dlActiveStatusFilter" class="dl-status-filter" aria-label="Filtrar tareas">
             <option value="all">Activas</option>
             <option value="queued">En cola</option>
             <option value="analyzing">Analizando</option>
             <option value="downloading">Descargando</option>
-            <option value="processing_ai">Procesando con IA</option>
-            <option value="generating_thumbnails">Generando miniaturas</option>
-            <option value="saving">Guardando</option>
             <option value="paused">Pausadas</option>
+            <option value="not_found">Inexistentes / Eliminadas</option>
             <option value="completed">Completadas</option>
             <option value="error">Con error</option>
             <option value="cancelled">Canceladas</option>
@@ -76,31 +75,48 @@ class DownloadCenterView {
   _updateSummary(s) {
     const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
     set('dlStatActive',(s.downloading||0)+(s.analyzing||0)+(s.processing_ai||0));
-    set('dlStatQueued',s.queued||0); set('dlStatDone',s.completed||0);
-    set('dlStatError',s.error||0);   set('dlStatPaused',s.paused||0);
+    set('dlStatQueued',s.queued||0); 
+    set('dlStatDone',s.completed||0);
+    set('dlStatPaused',s.paused||0);
+    
+    // Contar inexistentes de las tareas con error registradas
+    const allErrors = (this._historyTasks||[]).filter(t => t.status === 'error' || t.status === 'not_found');
+    const notFoundCount = allErrors.filter(t => t.status === 'not_found' || (t.error_message && (t.error_message.includes('no existe') || t.error_message.includes('eliminada')))).length;
+    set('dlStatNotFound', notFoundCount);
+    set('dlStatError', Math.max(0, (s.error||0) - notFoundCount));
+
     const rb=document.getElementById('dlResumeQueue');
     if(rb) rb.style.display=((s.paused||0)+(s.queued||0))>0?'':'none';
   }
 
   _renderActiveTasks() {
     const el=document.getElementById('dlActiveTasks'); if(!el) return;
-    const terminal=new Set(['completed','cancelled','error']);
+    const terminal=new Set(['completed','cancelled','error','not_found']);
     const active=[...this._tasks.values()].filter(t=>!terminal.has(t.status));
     const allById=new Map();
     (this._historyTasks||[]).forEach(t=>allById.set(t.id,t));
     [...this._tasks.values()].forEach(t=>allById.set(t.id,t));
     const filter=document.getElementById('dlActiveStatusFilter')?.value || 'all';
-    const visible=filter==='all' ? active : [...allById.values()].filter(t=>t.status===filter);
+    
+    let visible = [];
+    if (filter === 'all') {
+      visible = active;
+    } else if (filter === 'not_found') {
+      visible = [...allById.values()].filter(t => t.status === 'not_found' || (t.error_message && t.error_message.includes('no existe')));
+    } else {
+      visible = [...allById.values()].filter(t => t.status === filter);
+    }
+
     const count=document.getElementById('dlActiveFilterCount');
     if(count) count.textContent=filter==='all' ? `${active.length} activas` : `${visible.length} encontradas`;
+    
     if(!visible.length){
       const selected=document.getElementById('dlActiveStatusFilter')?.selectedOptions?.[0]?.textContent || 'ese estado';
-      const title=filter==='all' ? 'Sin tareas activas' : `Sin tareas ${escapeHtml(selected.toLowerCase())}`;
-      el.innerHTML=`<div class="empty-state" style="padding:32px"><div class="empty-icon">${filter==='all'?'😴':'🔎'}</div><div class="empty-title">${title}</div><div class="empty-desc">${filter==='all'?'Agregá URLs con "+ Agregar URL"':'Probá otro estado o actualizá la lista.'}</div></div>`;
+      el.innerHTML=`<div class="empty-state" style="padding:32px"><div class="empty-icon">😴</div><div class="empty-title">Sin tareas ${escapeHtml(selected.toLowerCase())}</div></div>`;
       return;
     }
     el.innerHTML='';
-    const order=['downloading','analyzing','processing_ai','generating_thumbnails','saving','queued','paused','error','completed','cancelled'];
+    const order=['downloading','analyzing','processing_ai','queued','paused','not_found','error','completed','cancelled'];
     [...visible].sort((a,b)=>(order.indexOf(a.status)<0?99:order.indexOf(a.status))-(order.indexOf(b.status)<0?99:order.indexOf(b.status))).forEach(t=>el.appendChild(this._buildCard(t)));
   }
 
@@ -111,15 +127,15 @@ class DownloadCenterView {
   }
 
   _buildCard(task) {
+    const isNotFound = task.status === 'not_found' || (task.error_message && task.error_message.includes('no existe'));
     const labels={queued:'En cola',analyzing:'Analizando...',downloading:'Descargando...',
       processing_ai:'IA...',generating_thumbnails:'Miniaturas...',saving:'Guardando...',
-      completed:'Completado',error:'Error',paused:'Pausado',cancelled:'Cancelado'};
+      completed:'Completado',error:isNotFound?'Inexistente':'Error',not_found:'Inexistente',paused:'Pausado',cancelled:'Cancelado'};
     const pct=Math.round(task.progress_pct||0);
     const shortUrl=(task.url||'').replace(/https?:\/\//,'').substring(0,55);
     
-    // Parseo seguro de fecha para evitar "Invalid Date"
     let dateStr = '—';
-    const rawDate = task.started_at || task.created_at || task.downloaded_at;
+    const rawDate = task.completed_at || task.started_at || task.created_at;
     if (rawDate) {
       try {
         const d = (typeof rawDate === 'number') 
@@ -134,15 +150,15 @@ class DownloadCenterView {
     }
 
     const card=document.createElement('div');
-    card.className='dl-task-card status-'+task.status; card.id='task-card-'+task.id;
+    card.className='dl-task-card status-'+(isNotFound ? 'not_found' : task.status); card.id='task-card-'+task.id;
     card.innerHTML=`
       <div class="dl-task-header">
         <div class="dl-task-url" title="${task.url||''}">🔗 ${shortUrl}${(task.url||'').length>55?'…':''}</div>
-        <span class="dl-task-status-badge status-badge-${task.status}">${labels[task.status]||task.status}</span>
+        <span class="dl-task-status-badge status-badge-${isNotFound ? 'not_found' : task.status}">${labels[task.status]||task.status}</span>
       </div>
-      ${task.error_message?`<div style="font-size:.8rem;color:var(--color-error);margin-bottom:8px;padding:6px 10px;background:rgba(239,68,68,.1);border-radius:6px;">⚠️ ${escapeHtml(task.error_message)}</div>`:''}
+      ${task.error_message?`<div style="font-size:.8rem;color:${isNotFound?'#9ca3af':'var(--color-error)'};margin-bottom:8px;padding:6px 10px;background:${isNotFound?'rgba(156,163,175,.1)':'rgba(239,68,68,.1)'};border-radius:6px;">${isNotFound?'🗑️':'⚠️'} ${escapeHtml(task.error_message)}</div>`:''}
       <div class="progress-bar-wrap" style="margin-bottom:6px">
-        <div class="progress-bar ${task.status==='error'?'error':task.status==='completed'?'success':''} ${['downloading','processing_ai','generating_thumbnails'].includes(task.status)?'animated':''}" style="width:${pct}%"></div>
+        <div class="progress-bar ${task.status==='error'?(isNotFound?'not-found':'error'):task.status==='completed'?'success':''} ${['downloading','processing_ai'].includes(task.status)?'animated':''}" style="width:${pct}%"></div>
       </div>
       <div style="display:flex;justify-content:space-between;font-size:.76rem;color:var(--text-muted);margin-bottom:8px">
         <span id="pct-${task.id}">${pct}%</span>
@@ -151,13 +167,12 @@ class DownloadCenterView {
       </div>
       <div class="dl-task-meta">
         ${task.attempt_count>1?`<span>🔄 Intento ${task.attempt_count}/${task.max_attempts}</span>`:''}
-        ${task.bytes_downloaded?`<span>📦 ${humanSize(task.bytes_downloaded)}${task.bytes_total?' / '+humanSize(task.bytes_total):''}</span>`:''}
         <span>🕐 ${dateStr}</span>
       </div>
       <div class="dl-task-actions">
         ${['queued','downloading'].includes(task.status)?`<button class="btn-icon" data-action="pause" data-id="${task.id}" title="Pausar">⏸</button>`:''}
         ${task.status==='paused'?`<button class="btn-icon" data-action="resume" data-id="${task.id}" title="Reanudar">▶️</button>`:''}
-        ${!['completed','cancelled'].includes(task.status)?`<button class="btn-icon" data-action="cancel" data-id="${task.id}" title="Cancelar" style="color:var(--color-error)">✕</button>`:''}
+        ${!['completed','cancelled','error','not_found'].includes(task.status)?`<button class="btn-icon" data-action="cancel" data-id="${task.id}" title="Cancelar" style="color:var(--color-error)">✕</button>`:''}
         <button class="btn-icon" data-action="logs" data-id="${task.id}" title="Ver logs">📋</button>
         ${task.post_id?`<button class="btn-icon" data-action="view" data-post-id="${task.post_id}" title="Ver en biblioteca">👁</button>`:''}
       </div>`;
@@ -241,25 +256,9 @@ class DownloadCenterView {
     document.getElementById('dlActiveStatusFilter')?.addEventListener('change',()=>this._renderActiveTasks());
     document.getElementById('dlClearLog')?.addEventListener('click',()=>{const e=document.getElementById('dlEventLog');if(e)e.innerHTML='';});
 
-    document.getElementById('dlIgBrowserProbe')?.addEventListener('click', async () => {
-      const url = window.prompt('Pegá una URL de publicación de Instagram para probar en el navegador:');
-      if (!url) return;
-      const btn = document.getElementById('dlIgBrowserProbe');
-      if (btn) { btn.disabled = true; btn.textContent = '🌐 Abriendo...'; }
-      try {
-        const result = await DownloadsAPI.igBrowserProbe(url.trim());
-        const text = result.message || `Resultado: ${result.state || result.status || 'desconocido'}`;
-        showToast(text, result.blocked || result.state === 'login_required' ? 'warning' : 'info', 10000);
-        this._appendLog('[Instagram navegador] '+text, result.blocked ? 'warning' : 'info');
-      } catch (err) {
-        showToast('No se pudo abrir la comprobación: '+(err.detail||err.message), 'error', 8000);
-      } finally {
-        if (btn) { btn.disabled = false; btn.textContent = '🌐 Probar en navegador'; }
-      }
-    });
-
     document.getElementById('dlLoginBtn')?.addEventListener('click', () => {
-      document.getElementById('modalLogin').style.display = '';
+      const m = document.getElementById('modalLogin');
+      if (m) m.style.display = '';
       window.syncInstagramLoginFields?.();
     });
 
@@ -305,14 +304,12 @@ class DownloadCenterView {
         <div style="padding:10px 12px;background:var(--bg-hover);border-radius:8px;margin-bottom:6px;font-size:.8rem">
           <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
             <div style="font-weight:600;word-break:break-all;flex:1">${escapeHtml((t.url||'').substring(0,90))}</div>
-            <button class="btn-icon" data-task-id="${t.id}" title="Ver detalle / respuesta completa" style="flex-shrink:0">🔍</button>
           </div>
           <div style="color:var(--color-error);margin-top:4px">${escapeHtml(t.error_message||'Error desconocido')}</div>
           <div style="color:var(--text-muted);margin-top:4px;display:flex;gap:12px">
             <span>Intentos: ${t.attempt_count||1}</span>
             <span>${formatDateTime(t.completed_at||t.created_at)}</span>
           </div>
-          <div class="err-detail" id="errDetail-${t.id}" style="display:none;margin-top:8px;padding:8px 10px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:6px;font-family:monospace;font-size:.74rem;white-space:pre-wrap;word-break:break-all;max-height:280px;overflow-y:auto"></div>
         </div>`).join('');
       panel.innerHTML = `
         <div style="font-weight:700;margin-bottom:8px">📊 ${failed.length} descarga(s) con error</div>
@@ -320,56 +317,32 @@ class DownloadCenterView {
           <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:6px">Motivos más frecuentes</div>
           ${summary}
         </div>
-        <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:8px">Detalle (últimas ${Math.min(failed.length,150)}) — 🔍 muestra el traceback/respuesta completa</div>
+        <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:8px">Detalle (últimas ${Math.min(failed.length,150)})</div>
         ${rows}`;
-
-      panel.querySelectorAll('[data-task-id]').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const taskId = btn.dataset.taskId;
-          const box = document.getElementById('errDetail-'+taskId);
-          const willShow = box.style.display === 'none';
-          box.style.display = willShow ? '' : 'none';
-          if (!willShow || box.dataset.loaded) return;
-          box.textContent = 'Cargando...';
-          try {
-            const logs = await DownloadsAPI.getTaskLogs(taskId);
-            const errorLogs = logs.filter(l => l.level === 'error' && l.details);
-            box.textContent = errorLogs.length
-              ? errorLogs.map(l => `[${l.logged_at}] ${l.message}\n\n${l.details}`).join('\n\n---\n\n')
-              : (logs.map(l => `[${l.level}] ${l.message}`).join('\n') || 'Sin logs guardados para esta tarea.');
-            box.dataset.loaded = '1';
-          } catch (err) {
-            box.textContent = 'Error cargando logs: ' + err.message;
-          }
-        });
-      });
     } catch (err) {
       panel.innerHTML = `<div class="text-sm" style="color:var(--color-error)">Error: ${err.message}</div>`;
     }
   }
 
   _bindWsEvents() {
-    ws.on('startup_interrupted',(e)=>{
-      const b=document.getElementById('dlInterruptedBanner'); if(b){b.style.display='';b.innerHTML=`⚠️ <strong>${e.message}</strong> — Usá "▶️ Reanudar cola" para continuar.`;}
-      const r=document.getElementById('dlResumeQueue'); if(r) r.style.display='';
-    });
     ws.on('task_queued',   (e)=>{this._appendLog('URL agregada: '+(e.url||''),'info'); this._loadInitialData();});
-    ws.on('task_status',   (e)=>{this._appendLog('['+e.task_id+'] '+(e.message||e.status),'info'); this._loadInitialData();});
+    ws.on('task_status',   (e)=>{
+      this._appendLog('['+e.task_id+'] '+(e.message||e.status||''), e.is_not_found ? 'warning' : 'info');
+      if (['completed','error','cancelled','not_found'].includes(e.status)) {
+        this._tasks.delete(e.task_id);
+      } else if (this._tasks.has(e.task_id)) {
+        const t = this._tasks.get(e.task_id);
+        t.status = e.status;
+        if (e.message) t.error_message = e.message;
+      }
+      this._loadInitialData();
+    });
     ws.on('task_progress', (e)=>{
       const p=document.getElementById('pct-'+e.task_id); if(p) p.textContent=Math.round(e.progress||0)+'%';
       const bar=document.querySelector('#task-card-'+e.task_id+' .progress-bar'); if(bar) bar.style.width=Math.round(e.progress||0)+'%';
     });
-    ws.on('file_progress', (e)=>{
-      const el=document.getElementById('dlStatSpeed'); if(!el) return;
-      el.textContent = e.speed_bps ? humanSpeed(e.speed_bps) : '—';
-      clearTimeout(this._speedResetTimer);
-      this._speedResetTimer = setTimeout(()=>{ if(el) el.textContent='—'; }, 3000);
-    });
     ws.on('task_completed',(e)=>{this._appendLog('✅ Finalizado post '+e.post_id,'success'); this._tasks.delete(e.task_id); setTimeout(()=>this._loadInitialData(),400);});
     ws.on('task_error',   (e)=>{this._appendLog('❌ Error tarea '+e.task_id+': '+e.error,'error'); this._loadInitialData();});
-    ws.on('task_retry',   (e)=>{this._appendLog('🔄 Reintento en '+e.delay+'s'+(e.is_rate_limit?' (rate limit)':''),'warning');});
-    ws.on('rate_limited', (e)=>{this._appendLog('⏳ '+e.message,'warning'); showToast(e.message,'warning',8000);});
-    ws.on('ai_completed', (e)=>{this._appendLog('🤖 IA completada post '+e.post_id,'success');});
   }
 
   _startStatsPoll() {
@@ -377,9 +350,7 @@ class DownloadCenterView {
       try {
         const [s,q]=await Promise.all([StatsAPI.library(),StatsAPI.queueSummary()]);
         this._renderLibStats(s); this._updateSummary(q);
-        const pe=document.getElementById('stat-posts'); if(pe) pe.textContent=(s.total_posts||0).toLocaleString();
-        const se=document.getElementById('stat-size');  if(se) se.textContent=humanSize(s.total_size_bytes||0);
       } catch {}
-    },30000);
+    },20000);
   }
 }

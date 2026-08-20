@@ -155,11 +155,13 @@ class DownloadTaskRepository(BaseRepository):
             return [dict(r) for r in await cur.fetchall()]
 
     async def set_status(self, task_id: int, status: TaskStatus, **extra) -> None:
+        from datetime import datetime, timezone
+        now_iso = datetime.now(timezone.utc).isoformat()
         data: dict[str, Any] = {"status": status.value}
         if status == TaskStatus.DOWNLOADING and "started_at" not in extra:
-            data["started_at"] = "strftime('%Y-%m-%dT%H:%M:%SZ','now')"
+            data["started_at"] = now_iso
         if status in (TaskStatus.COMPLETED, TaskStatus.ERROR, TaskStatus.CANCELLED):
-            data["completed_at"] = "strftime('%Y-%m-%dT%H:%M:%SZ','now')"
+            data["completed_at"] = now_iso
         data.update(extra)
         await self.update(task_id, data)
 
@@ -220,7 +222,7 @@ class DownloadTaskRepository(BaseRepository):
             cur = await db.execute(
                 """
                 SELECT * FROM download_tasks
-                WHERE status NOT IN ('completed','cancelled')
+                WHERE status NOT IN ('completed','cancelled','error')
                 ORDER BY
                     CASE status
                         WHEN 'downloading' THEN 0

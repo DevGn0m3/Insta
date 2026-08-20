@@ -4,229 +4,159 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Instagram Archiver</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>" />
-  <link rel="stylesheet" href="/assets/css/main.css" />
-  <link rel="stylesheet" href="/assets/css/components.css?v=3" />
   <link rel="stylesheet" href="/assets/css/themes.css" />
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  <link rel="stylesheet" href="/assets/css/components.css" />
 </head>
 <body>
-
-<!-- ── App Shell ──────────────────────────────────────────────────────────── -->
-<div id="app">
-
-  <!-- Sidebar -->
-  <aside id="sidebar" class="sidebar">
-    <div class="sidebar-logo">
-      <span class="logo-icon">📦</span>
-      <span class="logo-text">Archiver</span>
-    </div>
-
-    <nav class="sidebar-nav">
-      <a href="#" class="nav-item active" data-view="library" title="Biblioteca">
-        <span class="nav-icon">🖼️</span><span class="nav-label">Biblioteca</span>
-      </a>
-      <a href="#" class="nav-item" data-view="downloads" title="Descargas">
-        <span class="nav-icon">⬇️</span><span class="nav-label">Descargas</span>
-        <span class="nav-badge" id="badge-active" style="display:none">0</span>
-      </a>
-      <a href="#" class="nav-item" data-view="search" title="Buscar">
-        <span class="nav-icon">🔍</span><span class="nav-label">Buscar</span>
-      </a>
-      <a href="#" class="nav-item" data-view="authors" title="Autores">
-        <span class="nav-icon">👤</span><span class="nav-label">Autores</span>
-      </a>
-      <a href="#" class="nav-item" data-view="collections" title="Colecciones">
-        <span class="nav-icon">📁</span><span class="nav-label">Colecciones</span>
-      </a>
-      <a href="#" class="nav-item" data-view="favorites" title="Favoritos">
-        <span class="nav-icon">❤️</span><span class="nav-label">Favoritos</span>
-      </a>
-      <a href="#" class="nav-item" data-view="tags" title="Etiquetas">
-        <span class="nav-icon">🏷️</span><span class="nav-label">Etiquetas</span>
-      </a>
-      <a href="#" class="nav-item" data-view="health" title="Salud del Archivo">
-        <span class="nav-icon">🩺</span><span class="nav-label">Salud</span>
-      </a>
-      <a href="#" class="nav-item" data-view="config" title="Configuración">
-        <span class="nav-icon">⚙️</span><span class="nav-label">Configuración</span>
-      </a>
-    </nav>
-
-    <div class="sidebar-stats">
-      <div class="stat-mini"><span id="stat-posts">0</span><small>posts</small></div>
-      <div class="stat-mini"><span id="stat-size">0 B</span><small>tamaño</small></div>
-    </div>
-
-    <button class="theme-toggle" id="themeToggle" title="Cambiar tema">🌙</button>
-  </aside>
-
-  <!-- Main Content -->
-  <main id="main-content">
-
-    <!-- Header -->
-    <header class="top-header">
-      <div class="header-left">
-        <button class="btn-icon" id="sidebarToggle">☰</button>
-        <h1 class="page-title" id="pageTitle">Biblioteca</h1>
+  <div id="app">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <span class="logo-icon">📦</span>
+        <span class="logo-text">Archiver</span>
       </div>
-      <div class="header-center">
+
+      <div style="padding: 0 10px; margin-bottom: 8px;">
         <div class="quick-search-wrap">
-          <input type="text" id="quickSearch" class="quick-search" placeholder="Buscar en el archivo..." autocomplete="off" />
+          <input type="text" class="quick-search text-sm" id="quickSearch" placeholder="Buscar..." autocomplete="new-password" value="" />
           <div id="searchSuggestions" class="search-suggestions" style="display:none"></div>
         </div>
       </div>
-      <div class="header-right">
-        <div class="connection-dot" id="wsStatus" title="WebSocket desconectado"></div>
-        <div class="ig-status-wrap" id="igStatusWrap" title="Instagram: sin sesión" aria-live="polite">
-          <span class="ig-status-dot" id="igStatusDot" aria-hidden="true"></span>
-          <span class="ig-status-label" id="igStatusLabel">Instagram: sin sesión</span>
+
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-view="library"><span class="nav-icon">📚</span> <span class="nav-label">Biblioteca</span></a>
+        <a href="#" class="nav-item" data-view="downloads"><span class="nav-icon">⬇️</span> <span class="nav-label">Descargas</span> <span class="nav-badge" id="badge-active" style="display:none">0</span></a>
+        <a href="#" class="nav-item" data-view="search"><span class="nav-icon">🔍</span> <span class="nav-label">Búsqueda</span></a>
+        <a href="#" class="nav-item" data-view="authors"><span class="nav-icon">👤</span> <span class="nav-label">Autores</span></a>
+        <a href="#" class="nav-item" data-view="collections"><span class="nav-icon">📁</span> <span class="nav-label">Colecciones</span></a>
+        <a href="#" class="nav-item" data-view="favorites"><span class="nav-icon">❤️</span> <span class="nav-label">Favoritos</span></a>
+        <a href="#" class="nav-item" data-view="tags"><span class="nav-icon">🏷️</span> <span class="nav-label">Etiquetas</span></a>
+        <a href="#" class="nav-item" data-view="health"><span class="nav-icon">🩺</span> <span class="nav-label">Salud</span></a>
+        <a href="#" class="nav-item" data-view="config"><span class="nav-icon">⚙️</span> <span class="nav-label">Configuración</span></a>
+      </nav>
+
+      <div class="sidebar-stats">
+        <div class="stat-mini"><span id="stat-posts">0</span><small>Posts</small></div>
+        <div class="stat-mini"><span id="stat-size">0 B</span><small>Disco</small></div>
+      </div>
+
+      <div class="ig-status-wrap" id="igStatusWrap" style="padding: 10px 16px; cursor: pointer;" onclick="document.getElementById('modalLogin').style.display=''">
+        <span class="ig-status-dot" id="igStatusDot"></span>
+        <span class="ig-status-label" id="igStatusLabel">Instagram: verificando...</span>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div id="main-content">
+      <header class="top-header">
+        <div class="header-left">
+          <button class="btn-icon" id="sidebarToggle" title="Colapsar menú">☰</button>
+          <h1 class="page-title" id="pageTitle">Biblioteca</h1>
         </div>
-        <button class="btn-primary" id="addUrlBtn">+ Agregar URL</button>
-      </div>
-    </header>
-
-    <!-- Views container -->
-    <div id="views">
-      <div id="view-library"     class="view active"></div>
-      <div id="view-downloads"   class="view"></div>
-      <div id="view-search"      class="view"></div>
-      <div id="view-authors"     class="view"></div>
-      <div id="view-collections" class="view"></div>
-      <div id="view-favorites"   class="view"></div>
-      <div id="view-tags"        class="view"></div>
-      <div id="view-health"      class="view"></div>
-      <div id="view-config"      class="view"></div>
-    </div>
-
-  </main>
-</div>
-
-<!-- ── Add URL Modal ──────────────────────────────────────────────────────── -->
-<div id="modalAddUrl" class="modal-overlay" style="display:none">
-  <div class="modal">
-    <div class="modal-header">
-      <h2>Agregar URLs</h2>
-      <button class="btn-icon modal-close" data-modal="modalAddUrl">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="tab-bar">
-        <button class="tab-btn active" data-tab="single">URL única</button>
-        <button class="tab-btn" data-tab="batch">Múltiples URLs</button>
-        <button class="tab-btn" data-tab="file">Importar archivo</button>
-      </div>
-
-      <div id="tab-single" class="tab-content active">
-        <label class="form-label">URL de Instagram</label>
-        <input type="text" id="singleUrl" class="form-input"
-               placeholder="https://www.instagram.com/p/..." />
-        <div class="form-hint">Soporta posts, carruseles, videos y reels</div>
-      </div>
-
-      <div id="tab-batch" class="tab-content">
-        <label class="form-label">Una URL por línea</label>
-        <textarea id="batchUrls" class="form-textarea" rows="10"
-                  placeholder="https://www.instagram.com/p/ABC123/&#10;https://www.instagram.com/reel/XYZ456/&#10;..."></textarea>
-      </div>
-
-      <div id="tab-file" class="tab-content">
-        <div class="drop-zone" id="dropZone">
-          <span class="drop-icon">📄</span>
-          <p>Arrastrá un archivo .txt aquí</p>
-          <p class="drop-hint">o hacé click para seleccionar</p>
-          <input type="file" id="fileInput" accept=".txt" style="display:none" />
+        <div class="header-right">
+          <button class="btn-primary" id="addUrlBtn">➕ Agregar URL</button>
         </div>
-        <div id="filePreview" style="display:none">
-          <p class="file-preview-info"></p>
-        </div>
-      </div>
+      </header>
 
-      <div class="form-row">
-        <label class="form-label">Prioridad</label>
-        <select id="downloadPriority" class="form-select">
-          <option value="10">Alta</option>
-          <option value="5" selected>Normal</option>
-          <option value="1">Baja</option>
-        </select>
+      <div id="views">
+        <div class="view active" id="view-library"></div>
+        <div class="view" id="view-downloads"></div>
+        <div class="view" id="view-search"></div>
+        <div class="view" id="view-authors"></div>
+        <div class="view" id="view-collections"></div>
+        <div class="view" id="view-favorites"></div>
+        <div class="view" id="view-tags"></div>
+        <div class="view" id="view-health"></div>
+        <div class="view" id="view-config"></div>
       </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-secondary modal-close" data-modal="modalAddUrl">Cancelar</button>
-      <button class="btn-primary" id="startDownloadBtn">⬇ Iniciar descarga</button>
     </div>
   </div>
-</div>
 
-<!-- ── Post Viewer Modal ──────────────────────────────────────────────────── -->
-<div id="modalPost" class="modal-overlay modal-fullscreen" style="display:none">
-  <div class="modal modal-post">
-    <button class="btn-icon modal-close post-close-btn" data-modal="modalPost">✕</button>
-    <div id="postViewerContent"></div>
-  </div>
-</div>
-
-<!-- ── Instagram Login Modal ─────────────────────────────────────────────── -->
-<div id="modalLogin" class="modal-overlay" style="display:none">
-  <div class="modal">
-    <div class="modal-header">
-      <h2>Sesión de Instagram</h2>
-      <button class="btn-icon modal-close" data-modal="modalLogin">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="login-status" id="loginStatus"></div>
-
-      <label class="form-label">Método de inicio de sesión</label>
-      <div class="form-row" style="gap:12px; margin-bottom:14px;">
-        <label>
-          <input type="radio" name="igLoginMethod" value="password" checked autocomplete="off" onchange="syncInstagramLoginFields()" />
-          Usuario y contraseña
-        </label>
-        <label>
-          <input type="radio" name="igLoginMethod" value="sessionid" autocomplete="off" onchange="syncInstagramLoginFields()" />
-          Usar sessionid
-        </label>
+  <!-- Modal Agregar URL -->
+  <div class="modal-overlay" id="modalAddUrl" style="display:none">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Agregar URLs a la cola</h2>
+        <button class="btn-icon modal-close" data-modal="modalAddUrl">✕</button>
       </div>
-
-          <div id="igUsernameFields">
-            <label class="form-label">Usuario <span class="form-hint">(opcional con sessionid)</span></label>
-            <input type="text" id="igUsername" class="form-input" placeholder="@usuario (opcional con sessionid)" autocomplete="username" />
+      <div class="modal-body">
+        <div class="tab-bar">
+          <button class="tab-btn active" data-tab="single">Una URL</button>
+          <button class="tab-btn" data-tab="batch">Lote (texto)</button>
+          <button class="tab-btn" data-tab="file">Archivo .txt</button>
+        </div>
+        <div class="tab-content active" id="tab-single" style="margin-top:10px">
+          <input type="text" id="singleUrl" class="form-input" placeholder="https://www.instagram.com/p/..." />
+        </div>
+        <div class="tab-content" id="tab-batch" style="margin-top:10px">
+          <textarea id="batchUrls" class="form-textarea" rows="4" placeholder="Una URL por línea..."></textarea>
+        </div>
+        <div class="tab-content" id="tab-file" style="margin-top:10px">
+          <div class="drop-zone" id="dropZone">
+            <span class="drop-icon">📄</span>
+            <p>Arrastrá un archivo .txt aquí</p>
+            <p class="drop-hint">o hacé click para seleccionar</p>
+            <input type="file" id="fileInput" accept=".txt" style="display:none" />
           </div>
-
-      <div id="igPasswordFields">
-        <label class="form-label">Contraseña</label>
-        <input type="password" id="igPassword" class="form-input" placeholder="••••••••" autocomplete="current-password" />
-        <div class="form-hint">
-          La contraseña no se almacena. Solo se guarda la cookie de sesión localmente.
+          <div id="filePreview" style="display:none;margin-top:8px;font-size:.84rem;" class="file-preview-info"></div>
+        </div>
+        <div style="margin-top:14px;display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:.82rem;color:var(--text-muted)">Prioridad: <input type="number" id="downloadPriority" value="5" min="1" max="10" style="width:50px" class="form-input" /></div>
+          <div class="flex gap-8">
+            <button class="btn-secondary modal-close" data-modal="modalAddUrl">Cancelar</button>
+            <button class="btn-primary" id="startDownloadBtn">⬇ Iniciar descarga</button>
+          </div>
         </div>
       </div>
-
-      <div id="igSessionFields" hidden>
-        <label class="form-label">sessionid</label>
-        <input type="password" id="igSessionId" class="form-input" placeholder="Pegá aquí el valor de sessionid" autocomplete="off" />
-        <div class="form-hint">
-          Usá el sessionid de tu propia sesión ya verificada. No lo compartas ni lo publiques.
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-secondary modal-close" data-modal="modalLogin">Cancelar</button>
-      <button class="btn-primary" id="loginBtn">Iniciar sesión</button>
     </div>
   </div>
-</div>
 
-<!-- ── Toast Notifications ────────────────────────────────────────────────── -->
-<div id="toastContainer" class="toast-container"></div>
+  <!-- Modal Login Instagram -->
+  <div class="modal-overlay" id="modalLogin" style="display:none">
+    <div class="modal" style="max-width: 440px;">
+      <div class="modal-header">
+        <h2>Sesión de Instagram</h2>
+        <button class="btn-icon modal-close" data-modal="modalLogin">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="igActiveSessionBox" style="display:none;padding:10px 12px;background:rgba(34,197,94,.12);border:1px solid var(--color-success);border-radius:8px;font-size:.86rem;">
+          <span id="igActiveSessionText">✅ Sesión iniciada</span>
+          <button class="btn-secondary" id="igLogoutBtn" style="margin-top:8px;width:100%;color:var(--color-error);font-size:.82rem;padding:4px 8px;">Cerrar sesión</button>
+        </div>
 
-<!-- ── Scripts ────────────────────────────────────────────────────────────── -->
-<script src="/assets/js/utils/websocket.js"></script>
-<script src="/assets/js/utils/theme.js"></script>
-<script src="/assets/js/api.js?v=4"></script>
-<script src="/assets/js/components/virtual-list.js"></script>
-<script src="/assets/js/components/carousel.js"></script>
-<script src="/assets/js/components/library.js?v=4"></script>
-<script src="/assets/js/components/download-center.js?v=3"></script>
-<script src="/assets/js/components/search.js"></script>
-<script src="/assets/js/app.js?v=7"></script>
+        <div>
+          <label class="form-label">Usar sessionid</label>
+          <div class="form-hint" style="margin-bottom:6px">Pegá tu cookie <code>sessionid</code> para acceder a tus posts guardados y descargas.</div>
+          <input type="password" id="igSessionId" class="form-input" placeholder="Ej: 8006278546%3A..." autocomplete="off" />
+        </div>
 
+        <div id="loginStatus" style="font-size:.82rem;min-height:18px"></div>
+
+        <div class="flex gap-8 justify-end" style="margin-top: 6px;">
+          <button class="btn-secondary modal-close" data-modal="modalLogin">Cancelar</button>
+          <button class="btn-primary" id="loginBtn">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Post Viewer -->
+  <div class="modal-overlay modal-fullscreen" id="modalPost" style="display:none">
+    <div class="modal modal-post">
+      <button class="post-close-btn modal-close" data-modal="modalPost" title="Cerrar (Esc)">✕</button>
+      <div id="postViewerContent" style="width: 100%; height: 100%;"></div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scripts -->
+  <script src="/assets/js/api.js?v=5"></script>
+  <script src="/assets/js/components/library.js?v=5"></script>
+  <script src="/assets/js/components/download-center.js?v=4"></script>
+  <script src="/assets/js/components/search.js?v=2"></script>
+  <script src="/assets/js/app.js?v=8"></script>
 </body>
 </html>

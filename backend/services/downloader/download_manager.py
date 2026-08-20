@@ -114,7 +114,6 @@ class ThumbnailGenerator:
                 try:
                     import cv2
                     vid = cv2.VideoCapture(str(file_path))
-                    # Buscar el primer fotograma válido
                     success, frame = vid.read()
                     vid.release()
                     if success:
@@ -331,7 +330,7 @@ class DownloadManager:
                 else:
                     msg = str(exc).lower()
                     is_rate = any(w in msg for w in ("rate limit", "too many requests", "429", "throttl"))
-                    is_fatal = any(w in msg for w in ("privad", "private", "no existe", "404", "login_required"))
+                    is_fatal = any(w in msg for w in ("privad", "private", "no existe", "404", "login_required", "eliminada"))
                     retry_after_s = None
 
                 if is_rate:
@@ -340,7 +339,7 @@ class DownloadManager:
                     logger.warning("[RATE_LIMIT] Cooldown de %.0fs activado", cooldown)
 
                 task_data = await self._task_repo.get_by_id(task_id)
-                attempt = task_data["retry_count"] if task_data else 0
+                attempt = task_data.get("retry_count", task_data.get("attempt_count", 0)) if task_data else 0
                 max_retries = config.downloader.max_retries
                 base_delay = config.downloader.retry_delay_base_s
                 max_delay = config.downloader.retry_delay_max_s
@@ -350,8 +349,27 @@ class DownloadManager:
                     await self._task_repo.increment_attempt(task_id, delay)
                     await tlog.warning(f"Reintentando en {delay:.0f}s (intento {attempt+1})")
                 else:
-                    await self._task_repo.set_status(task_id, TaskStatus.ERROR, error_message=str(exc))
-                    await self._broadcast({"type": "task_error", "task_id": task_id, "error": str(exc)})
+                    now_iso = datetime.now(timezone.utc).isoformat()
+                    from backend.database.connection import get_db
+                    async with get_db() as db:
+                        await db.execute(
+                            "UPDATE download_tasks SET status='error', error_message=?, completed_at=?, attempt_count=max_attempts WHERE id=?",
+                            (str(exc), now_iso, task_id)
+                        )
+                    await self._broadcast({
+                        "type": "task_status", 
+                        "task_id": task_id, 
+                        "status": "error", 
+                        "message": str(exc),
+                        "completed_at": now_iso,
+                        "is_not_found": is_fatal
+                    })
+                    await self._broadcast({
+                        "type": "task_error", 
+                        "task_id": task_id, 
+                        "error": str(exc),
+                        "is_not_found": is_fatal
+                    })
 
     async def _run_instagram_pipeline(self, task_id: int, url: str, tlog: TaskLogger) -> None:
         await self._task_repo.set_status(task_id, TaskStatus.ANALYZING)
